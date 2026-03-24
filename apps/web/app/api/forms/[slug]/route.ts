@@ -25,6 +25,32 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       },
     })
 
+    // Auto-create CRM lead if email field is present
+    const emailValue = Object.entries(data as Record<string, string>).find(
+      ([k]) => k.toLowerCase().includes("email")
+    )?.[1]
+    const nameValue = Object.entries(data as Record<string, string>).find(
+      ([k]) => k.toLowerCase().includes("name")
+    )?.[1]
+
+    if (emailValue && typeof emailValue === "string") {
+      // Check if lead with this email already exists for the org
+      const existing = await db.lead.findFirst({
+        where: { organizationId: form.organizationId, email: emailValue },
+      })
+      if (!existing) {
+        await db.lead.create({
+          data: {
+            organizationId: form.organizationId,
+            name: nameValue ?? emailValue,
+            email: emailValue,
+            source: "intake_form",
+            status: "NEW",
+          },
+        })
+      }
+    }
+
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ error: "Failed to submit form" }, { status: 500 })

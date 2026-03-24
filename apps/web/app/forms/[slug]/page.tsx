@@ -1,6 +1,12 @@
+import type { Metadata } from "next"
 import { db } from "@backoffice-os/database"
 import { notFound } from "next/navigation"
 import { FormRenderer } from "./form-renderer"
+import { CookieBanner } from "@/components/cookie-banner"
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default async function PublicFormPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -55,6 +61,7 @@ export default async function PublicFormPage({ params }: { params: Promise<{ slu
           Powered by ArcheionOS
         </p>
       </div>
+      <CookieBanner />
     </div>
   )
 }

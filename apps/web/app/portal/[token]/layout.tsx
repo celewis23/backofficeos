@@ -1,7 +1,13 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { db } from "@backoffice-os/database"
 import Link from "next/link"
-import { Building2, FileText, Folders, FileSignature, FolderOpen, MessageSquare, LayoutDashboard } from "lucide-react"
+import { Building2, FileText, Folders, FileSignature, FolderOpen, MessageSquare, LayoutDashboard, Clock } from "lucide-react"
+import { CookieBanner } from "@/components/cookie-banner"
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 const NAV = [
   { href: "", label: "Overview", icon: LayoutDashboard },
@@ -35,8 +41,25 @@ export default async function PortalLayout({
     },
   })
 
-  if (!portalToken || portalToken.expiresAt < new Date()) {
+  if (!portalToken) {
     notFound()
+  }
+
+  if (portalToken.expiresAt < new Date()) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="text-center space-y-4 max-w-sm">
+          <div className="size-12 rounded-full bg-muted flex items-center justify-center mx-auto">
+            <Clock className="size-6 text-muted-foreground" />
+          </div>
+          <h2 className="text-lg font-semibold">Your portal link has expired</h2>
+          <p className="text-sm text-muted-foreground">
+            For security, portal links expire after 30 days. Please contact your account manager to receive a new link.
+          </p>
+        </div>
+        <CookieBanner />
+      </div>
+    )
   }
 
   const { client } = portalToken
@@ -82,6 +105,7 @@ export default async function PortalLayout({
           {children}
         </main>
       </div>
+      <CookieBanner />
     </div>
   )
 }

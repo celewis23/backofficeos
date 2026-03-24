@@ -208,3 +208,61 @@ export async function resolveGdprRequest(id: string, status: "COMPLETED" | "REJE
   revalidatePath("/settings")
   return { success: true }
 }
+
+export async function deleteClientData(clientId: string) {
+  const { orgId, session } = await requireOrg()
+
+  // Verify client belongs to this org
+  const client = await db.client.findUnique({
+    where: { id: clientId, organizationId: orgId },
+    select: { id: true, name: true },
+  })
+  if (!client) return { error: "Client not found" }
+
+  // Anonymize PII fields
+  await db.client.update({
+    where: { id: clientId },
+    data: {
+      name: "[Deleted]",
+      email: null,
+      phone: null,
+      website: null,
+      address: null,
+      notes: null,
+      avatar: null,
+      status: "ARCHIVED",
+    },
+  })
+
+  // Remove contacts
+  await db.contact.deleteMany({ where: { clientId } })
+
+  // Log the erasure action
+  await db.auditLog.create({
+    data: {
+      organizationId: orgId,
+      userId: session.user.id,
+      action: "gdpr.client_data_deleted",
+      entityType: "client",
+      entityId: clientId,
+      metadata: { originalName: client.name },
+    },
+  })
+
+  // Log a GDPR request for the erasure
+  await db.gdprRequest.create({
+    data: {
+      organizationId: orgId,
+      requestedBy: session.user.id,
+      clientId,
+      type: "DATA_DELETION",
+      notes: "Data deleted via GDPR erasure action",
+      status: "COMPLETED",
+      resolvedAt: new Date(),
+    },
+  })
+
+  revalidatePath("/settings")
+  revalidatePath("/clients")
+  return { success: true }
+}

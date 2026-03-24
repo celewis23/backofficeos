@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { db } from "@backoffice-os/database"
 import { BookingPageClient } from "./booking-page-client"
+import { CookieBanner } from "@/components/cookie-banner"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -10,7 +11,10 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params
   const page = await db.bookingPage.findFirst({ where: { slug, isActive: true } })
   if (!page) return { title: "Booking Not Found" }
-  return { title: `Book a ${page.name}` }
+  return {
+    title: `Book a ${page.name}`,
+    robots: { index: false, follow: false },
+  }
 }
 
 export default async function PublicBookingPage({ params }: Props) {
@@ -86,18 +90,21 @@ export default async function PublicBookingPage({ params }: Props) {
   }
 
   return (
-    <BookingPageClient
-      page={{
-        id: bookingPage.id,
-        name: bookingPage.name,
-        description: bookingPage.description,
-        duration: bookingPage.duration,
-        collectPhone: bookingPage.collectPhone,
-        collectNotes: bookingPage.collectNotes,
-        requireConfirmation: bookingPage.requireConfirmation,
-        organization: bookingPage.organization,
-      }}
-      slots={slots}
-    />
+    <>
+      <BookingPageClient
+        page={{
+          id: bookingPage.id,
+          name: bookingPage.name,
+          description: bookingPage.description,
+          duration: bookingPage.duration,
+          collectPhone: bookingPage.collectPhone,
+          collectNotes: bookingPage.collectNotes,
+          requireConfirmation: bookingPage.requireConfirmation,
+          organization: bookingPage.organization,
+        }}
+        slots={slots}
+      />
+      <CookieBanner />
+    </>
   )
 }

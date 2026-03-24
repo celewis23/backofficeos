@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { requireOrg } from "@/lib/auth-server"
 import { db } from "@backoffice-os/database"
+import { createNotification } from "@/lib/notifications"
 
 const automationSchema = z.object({
   name: z.string().min(1),
@@ -98,7 +99,52 @@ export async function runAutomations(
           where: { id: automation.id },
           data: { lastRunAt: new Date(), runCount: { increment: 1 } },
         })
-        // TODO: execute each action (send email, create task, webhook, etc.)
+
+        // Execute each action
+        const actionList = Array.isArray(automation.actions) ? (automation.actions as { type: string; config: Record<string, string> }[]) : []
+        for (const action of actionList) {
+          try {
+            if (action.type === "send_notification") {
+              await createNotification({
+                organizationId: orgId,
+                type: "MENTION",
+                title: "Automation triggered",
+                body: action.config.message ?? `Automation "${automation.name}" fired.`,
+                entityType,
+                entityId,
+              })
+            } else if (action.type === "create_task") {
+              await db.task.create({
+                data: {
+                  projectId: entityType === "project" ? entityId : (triggerData.projectId as string | undefined) ?? entityId,
+                  title: action.config.title ?? "Automated task",
+                  status: "TODO",
+                  order: 0,
+                },
+              })
+            } else if (action.type === "webhook") {
+              const url = action.config.url
+              if (url) {
+                await fetch(url, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    automationId: automation.id,
+                    automationName: automation.name,
+                    trigger: triggerType,
+                    entityType,
+                    entityId,
+                    data: triggerData,
+                    firedAt: new Date().toISOString(),
+                  }),
+                  signal: AbortSignal.timeout(10000),
+                }).catch(() => {})
+              }
+            }
+          } catch {
+            // non-fatal per-action failure
+          }
+        }
       }
     }
   } catch {

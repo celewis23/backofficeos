@@ -5,6 +5,7 @@ import { requireOrg } from "@/lib/auth-server"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import type { LeadStatus } from "@backoffice-os/database"
+import { createAuditLog } from "@/lib/audit"
 
 const createLeadSchema = z.object({
   name: z.string().min(1),
@@ -45,7 +46,9 @@ export async function createLead(input: unknown) {
 
 export async function updateLeadStatus(leadId: string, status: LeadStatus) {
   try {
-    const { orgId } = await requireOrg()
+    const { orgId, session } = await requireOrg()
+
+    const lead = await db.lead.findFirst({ where: { id: leadId, organizationId: orgId }, select: { name: true, status: true } })
 
     await db.lead.update({
       where: { id: leadId, organizationId: orgId },
@@ -53,6 +56,15 @@ export async function updateLeadStatus(leadId: string, status: LeadStatus) {
         status,
         closedAt: status === "WON" || status === "LOST" ? new Date() : null,
       },
+    })
+
+    await createAuditLog({
+      organizationId: orgId,
+      userId: session.user.id,
+      action: "lead.status_changed",
+      entityType: "lead",
+      entityId: leadId,
+      metadata: { name: lead?.name, from: lead?.status, to: status },
     })
 
     revalidatePath("/crm")

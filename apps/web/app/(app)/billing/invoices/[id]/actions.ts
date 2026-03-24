@@ -4,13 +4,16 @@ import { db } from "@backoffice-os/database"
 import { requireOrg } from "@/lib/auth-server"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { createNotification } from "@/lib/notifications"
+import { createAuditLog } from "@/lib/audit"
+import { runAutomations } from "@/app/(app)/automations/actions"
 
 export async function updateInvoiceStatus(
   invoiceId: string,
   status: "SENT" | "PAID" | "VOID" | "OVERDUE"
 ) {
   try {
-    const { orgId } = await requireOrg()
+    const { orgId, session } = await requireOrg()
 
     const invoice = await db.invoice.findFirst({
       where: { id: invoiceId, organizationId: orgId },
@@ -28,6 +31,43 @@ export async function updateInvoiceStatus(
       where: { id: invoiceId },
       data,
     })
+
+    // Notifications
+    if (status === "PAID") {
+      await createNotification({
+        organizationId: orgId,
+        type: "INVOICE_PAID",
+        title: "Invoice paid",
+        body: `Invoice ${invoice.number} has been marked as paid.`,
+        entityType: "invoice",
+        entityId: invoiceId,
+      })
+    } else if (status === "OVERDUE") {
+      await createNotification({
+        organizationId: orgId,
+        type: "INVOICE_OVERDUE",
+        title: "Invoice overdue",
+        body: `Invoice ${invoice.number} is overdue.`,
+        entityType: "invoice",
+        entityId: invoiceId,
+      })
+    }
+
+    // Audit log
+    await createAuditLog({
+      organizationId: orgId,
+      userId: session.user.id,
+      action: `invoice.status_changed.${status.toLowerCase()}`,
+      entityType: "invoice",
+      entityId: invoiceId,
+      metadata: { from: invoice.status, to: status },
+    })
+
+    // Fire automations
+    const triggerMap: Record<string, string> = { PAID: "invoice.paid", OVERDUE: "invoice.overdue" }
+    if (triggerMap[status]) {
+      await runAutomations(orgId, triggerMap[status], "invoice", invoiceId, { status, number: invoice.number })
+    }
 
     revalidatePath(`/billing/invoices/${invoiceId}`)
     revalidatePath("/billing")
@@ -47,7 +87,7 @@ const recordPaymentSchema = z.object({
 
 export async function recordPayment(input: unknown) {
   try {
-    const { orgId } = await requireOrg()
+    const { orgId, session } = await requireOrg()
     const data = recordPaymentSchema.parse(input)
 
     const invoice = await db.invoice.findFirst({
@@ -81,6 +121,15 @@ export async function recordPayment(input: unknown) {
         },
       }),
     ])
+
+    await createAuditLog({
+      organizationId: orgId,
+      userId: session.user.id,
+      action: "invoice.payment_recorded",
+      entityType: "invoice",
+      entityId: data.invoiceId,
+      metadata: { amount: data.amount, method: data.method },
+    })
 
     revalidatePath(`/billing/invoices/${data.invoiceId}`)
     revalidatePath("/billing")

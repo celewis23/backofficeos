@@ -26,7 +26,7 @@ import { format } from "date-fns"
 import {
   createCustomField, deleteCustomField,
   createTaxRate, updateTaxRate, deleteTaxRate,
-  requestDataExport, submitGdprRequest,
+  requestDataExport, submitGdprRequest, deleteClientData,
 } from "./actions"
 
 const NAV_ITEMS = [
@@ -1119,6 +1119,8 @@ function GdprSection({ requests: initial }: { requests: GdprRequest[] }) {
   const [type, setType] = React.useState("DATA_ACCESS")
   const [notes, setNotes] = React.useState("")
   const [submitting, setSubmitting] = React.useState(false)
+  const [deleteClientId, setDeleteClientId] = React.useState("")
+  const [deleting, setDeleting] = React.useState(false)
 
   async function handleSubmit() {
     setSubmitting(true)
@@ -1128,6 +1130,17 @@ function GdprSection({ requests: initial }: { requests: GdprRequest[] }) {
     toast.success("GDPR request submitted")
     setNotes("")
     window.location.reload()
+  }
+
+  async function handleDeleteClientData() {
+    if (!deleteClientId.trim()) { toast.error("Please enter a client ID"); return }
+    if (!confirm("This will permanently anonymize all PII for this client. This cannot be undone. Continue?")) return
+    setDeleting(true)
+    const result = await deleteClientData(deleteClientId.trim()) as { success?: boolean; error?: string }
+    setDeleting(false)
+    if (result.error) { toast.error(result.error); return }
+    toast.success("Client data anonymized successfully")
+    setDeleteClientId("")
   }
 
   return (
@@ -1157,6 +1170,18 @@ function GdprSection({ requests: initial }: { requests: GdprRequest[] }) {
         <Button size="sm" onClick={handleSubmit} disabled={submitting}>
           {submitting ? "Submitting..." : "Submit Request"}
         </Button>
+      </div>
+
+      {/* Delete client data */}
+      <div className="rounded-lg border border-destructive/30 p-4 space-y-3">
+        <p className="text-xs font-semibold text-destructive uppercase tracking-wide">Erase client data (GDPR Right to Erasure)</p>
+        <p className="text-xs text-muted-foreground">Anonymizes all personally identifiable information for a specific client. This action is irreversible.</p>
+        <div className="flex items-center gap-2">
+          <Input className="h-8 text-xs flex-1" placeholder="Client ID (e.g. clm...)" value={deleteClientId} onChange={(e) => setDeleteClientId(e.target.value)} />
+          <Button size="sm" variant="destructive" onClick={handleDeleteClientData} disabled={deleting || !deleteClientId.trim()}>
+            {deleting ? "Deleting..." : "Erase Data"}
+          </Button>
+        </div>
       </div>
 
       {/* Data retention info */}

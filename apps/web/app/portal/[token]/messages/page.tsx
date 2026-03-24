@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { db } from "@backoffice-os/database"
 import { formatDate } from "@/lib/utils"
 import { MessageSquare } from "lucide-react"
+import { PortalMessageForm } from "./message-form"
 
 export default async function PortalMessagesPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
@@ -34,6 +35,8 @@ export default async function PortalMessagesPage({ params }: { params: Promise<{
         <h1 className="text-xl font-semibold text-foreground">Messages</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Communication with your team</p>
       </div>
+
+      <PortalMessageForm token={token} />
 
       {threads.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center border border-dashed border-border rounded-xl">

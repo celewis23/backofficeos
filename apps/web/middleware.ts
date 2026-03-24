@@ -12,6 +12,7 @@ const PUBLIC_PATHS = [
   "/portal",
   "/forms",
   "/api/forms",
+  "/api/portal",
   "/onboarding",
   "/_next",
   "/favicon.ico",

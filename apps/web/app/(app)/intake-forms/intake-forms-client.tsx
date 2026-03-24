@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { toast } from "sonner"
-import { Plus, ClipboardList, Copy, Trash2, Eye, ToggleLeft, ExternalLink, GripVertical, X } from "lucide-react"
+import { Plus, ClipboardList, Copy, Trash2, Eye, ToggleLeft, ExternalLink, GripVertical, X, Code2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -102,6 +102,13 @@ export function IntakeFormsClient({ forms: initial }: { forms: IntakeForm[] }) {
     toast.success("Link copied to clipboard")
   }
 
+  function copyEmbed(slug: string) {
+    const url = `${window.location.origin}/forms/${slug}`
+    const code = `<iframe src="${url}" width="100%" height="600" frameborder="0" allow="clipboard-write"></iframe>`
+    navigator.clipboard.writeText(code)
+    toast.success("Embed code copied to clipboard")
+  }
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
@@ -153,8 +160,11 @@ export function IntakeFormsClient({ forms: initial }: { forms: IntakeForm[] }) {
                       <Eye className="size-3" /> Submissions
                     </Link>
                   </Button>
-                  <Button variant="ghost" size="icon-sm" onClick={() => copyLink(form.slug)}>
+                  <Button variant="ghost" size="icon-sm" onClick={() => copyLink(form.slug)} title="Copy link">
                     <Copy className="size-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon-sm" onClick={() => copyEmbed(form.slug)} title="Copy embed code">
+                    <Code2 className="size-3.5" />
                   </Button>
                   <Button variant="ghost" size="icon-sm" asChild>
                     <a href={`/forms/${form.slug}`} target="_blank" rel="noopener noreferrer">

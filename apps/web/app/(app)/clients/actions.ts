@@ -4,6 +4,8 @@ import { db } from "@backoffice-os/database"
 import { requireOrg } from "@/lib/auth-server"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { createAuditLog } from "@/lib/audit"
+import { runAutomations } from "@/app/(app)/automations/actions"
 
 const createClientSchema = z.object({
   name: z.string().min(1),
@@ -16,7 +18,7 @@ const createClientSchema = z.object({
 
 export async function createClient(input: unknown) {
   try {
-    const { orgId } = await requireOrg()
+    const { orgId, session } = await requireOrg()
     const data = createClientSchema.parse(input)
 
     const client = await db.client.create({
@@ -30,6 +32,17 @@ export async function createClient(input: unknown) {
         status: data.status,
       },
     })
+
+    await createAuditLog({
+      organizationId: orgId,
+      userId: session.user.id,
+      action: "client.created",
+      entityType: "client",
+      entityId: client.id,
+      metadata: { name: data.name },
+    })
+
+    await runAutomations(orgId, "client.created", "client", client.id, { name: data.name })
 
     revalidatePath("/clients")
     return { success: true, clientId: client.id }
@@ -58,10 +71,21 @@ export async function updateClientStatus(clientId: string, status: "ACTIVE" | "I
 
 export async function deleteClient(clientId: string) {
   try {
-    const { orgId } = await requireOrg()
+    const { orgId, session } = await requireOrg()
+
+    const client = await db.client.findUnique({ where: { id: clientId, organizationId: orgId }, select: { name: true } })
 
     await db.client.delete({
       where: { id: clientId, organizationId: orgId },
+    })
+
+    await createAuditLog({
+      organizationId: orgId,
+      userId: session.user.id,
+      action: "client.deleted",
+      entityType: "client",
+      entityId: clientId,
+      metadata: { name: client?.name },
     })
 
     revalidatePath("/clients")
