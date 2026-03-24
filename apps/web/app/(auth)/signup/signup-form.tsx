@@ -42,31 +42,35 @@ export function SignupForm() {
   } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
   async function onSubmit(values: FormValues) {
-    // 1. Create the user account
-    const { data: signUpData, error: signUpError } = await signUp.email({
-      name: values.name,
-      email: values.email,
-      password: values.password,
-    })
+    try {
+      // 1. Create the user account
+      const { error: signUpError } = await signUp.email({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+      })
 
-    if (signUpError) {
-      toast.error(signUpError.message ?? "Failed to create account")
-      return
+      if (signUpError) {
+        toast.error(signUpError.message ?? "Failed to create account")
+        return
+      }
+
+      // 2. Create the organization
+      const { error: orgError } = await organization.create({
+        name: values.orgName,
+        slug: toSlug(values.orgName),
+      })
+
+      if (orgError) {
+        toast.error("Account created but failed to set up workspace. Please try again.")
+        return
+      }
+
+      router.push("/onboarding")
+      router.refresh()
+    } catch {
+      toast.error("Something went wrong. Please check your connection and try again.")
     }
-
-    // 2. Create the organization
-    const { error: orgError } = await organization.create({
-      name: values.orgName,
-      slug: toSlug(values.orgName),
-    })
-
-    if (orgError) {
-      toast.error("Account created but failed to set up workspace. Please try again.")
-      return
-    }
-
-    router.push("/onboarding")
-    router.refresh()
   }
 
   return (

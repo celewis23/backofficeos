@@ -33,16 +33,20 @@ export function LoginForm() {
   } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
   async function onSubmit(values: FormValues) {
-    const { error } = await signIn.email({
-      email: values.email,
-      password: values.password,
-      callbackURL: callbackUrl,
-    })
-    if (error) {
-      toast.error(error.message ?? "Invalid email or password")
-    } else {
-      router.push(callbackUrl)
-      router.refresh()
+    try {
+      const { error } = await signIn.email({
+        email: values.email,
+        password: values.password,
+        callbackURL: callbackUrl,
+      })
+      if (error) {
+        toast.error(error.message ?? "Invalid email or password")
+      } else {
+        router.push(callbackUrl)
+        router.refresh()
+      }
+    } catch {
+      toast.error("Something went wrong. Please check your connection and try again.")
     }
   }
 
