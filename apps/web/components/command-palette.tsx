@@ -48,7 +48,7 @@ const QUICK_ACTIONS = [
   { icon: Plus,       label: "New Client",         action: "new-client" },
   { icon: Plus,       label: "New Project",        action: "new-project" },
   { icon: Plus,       label: "New Task",           action: "new-task" },
-  { icon: Sparkles,   label: "Ask BackOffice AI",  action: "open-ai" },
+  { icon: Sparkles,   label: "Ask Archeion AI",  action: "open-ai" },
 ];
 
 export function CommandPalette() {

@@ -81,7 +81,7 @@ export function Topbar({ title, breadcrumb, actions }: TopbarProps) {
               <Sparkles className="size-4 text-primary" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>BackOffice AI</TooltipContent>
+          <TooltipContent>Archeion AI</TooltipContent>
         </Tooltip>
 
         {/* Notifications */}

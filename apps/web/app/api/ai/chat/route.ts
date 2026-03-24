@@ -245,7 +245,7 @@ function buildSystemPrompt(context: any, user: any): string {
     }
   }
 
-  return `You are BackOffice AI, the intelligent assistant built into ArcheionOS — a business operating system used by entrepreneurs and business teams.
+  return `You are Archeion AI, the intelligent assistant built into ArcheionOS — a business operating system used by entrepreneurs and business teams.
 
 Today is ${now}. The user's name is ${user?.name ?? "there"}.
 ${contextStr}

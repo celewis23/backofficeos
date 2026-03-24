@@ -61,7 +61,7 @@ export function AIPanel() {
               <div className="size-6 rounded-md bg-primary flex items-center justify-center">
                 <Sparkles className="size-3.5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-sm">BackOffice AI</span>
+              <span className="font-semibold text-sm">Archeion AI</span>
               <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
                 Beta
               </span>
@@ -109,7 +109,7 @@ export function AIPanel() {
                   <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
                     <Sparkles className="size-6 text-primary" />
                   </div>
-                  <p className="text-sm font-semibold text-foreground">BackOffice AI</p>
+                  <p className="text-sm font-semibold text-foreground">Archeion AI</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Your intelligent business assistant. Ask me anything about your clients, invoices, projects, or tasks.
                   </p>
