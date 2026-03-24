@@ -92,7 +92,7 @@ export default async function AnalyticsPage() {
   })
 
   const topClientDetails = await Promise.all(
-    topClients.map(async (tc) => {
+    topClients.map(async (tc: (typeof topClients)[number]) => {
       const client = await db.client.findUnique({
         where: { id: tc.clientId! },
         select: { id: true, name: true },
