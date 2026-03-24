@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
@@ -608,6 +609,14 @@ function SecuritySection() {
 }
 
 function AppearanceSection() {
+  const { theme, setTheme } = useTheme()
+
+  const options = [
+    { value: "light", label: "Light" },
+    { value: "dark",  label: "Dark" },
+    { value: "system", label: "System" },
+  ]
+
   return (
     <div className="space-y-6">
       <div>
@@ -620,12 +629,17 @@ function AppearanceSection() {
         <div>
           <Label className="mb-3 block">Theme</Label>
           <div className="grid grid-cols-3 gap-3">
-            {["Light", "Dark", "System"].map((theme) => (
+            {options.map((opt) => (
               <button
-                key={theme}
-                className="rounded-lg border-2 border-border p-3 text-sm font-medium hover:border-primary transition-colors"
+                key={opt.value}
+                onClick={() => setTheme(opt.value)}
+                className={`rounded-lg border-2 p-3 text-sm font-medium transition-colors ${
+                  theme === opt.value
+                    ? "border-primary text-foreground"
+                    : "border-border hover:border-primary/50 text-muted-foreground"
+                }`}
               >
-                {theme}
+                {opt.label}
               </button>
             ))}
           </div>
