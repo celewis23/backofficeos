@@ -116,7 +116,8 @@ export async function runAutomations(
             } else if (action.type === "create_task") {
               await db.task.create({
                 data: {
-                  projectId: entityType === "project" ? entityId : (triggerData.projectId as string | undefined) ?? entityId,
+                  organizationId: orgId,
+                  projectId: entityType === "project" ? entityId : (triggerData.projectId as string | undefined) ?? null,
                   title: action.config.title ?? "Automated task",
                   status: "TODO",
                   order: 0,
