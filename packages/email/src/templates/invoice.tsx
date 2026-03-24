@@ -156,7 +156,7 @@ export function InvoiceEmail({
 
           <Hr style={{ borderColor: "#e6e6e6" }} />
           <Text style={footer}>
-            Sent by {orgName} via BackOfficeOS
+            Sent by {orgName} via ArcheionOS
           </Text>
         </Container>
       </Body>

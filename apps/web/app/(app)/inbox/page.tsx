@@ -2,7 +2,7 @@ import { requireOrg } from "@/lib/auth-server"
 import { db } from "@backoffice-os/database"
 import { InboxClient } from "./inbox-client"
 
-export const metadata = { title: "Inbox — BackOfficeOS" }
+export const metadata = { title: "Inbox — ArcheionOS" }
 
 export default async function InboxPage() {
   const { orgId } = await requireOrg()

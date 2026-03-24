@@ -2,7 +2,7 @@ import { requireOrg } from "@/lib/auth-server"
 import { db } from "@backoffice-os/database"
 import { InvoiceBuilder } from "./invoice-builder"
 
-export const metadata = { title: "New Invoice — BackOfficeOS" }
+export const metadata = { title: "New Invoice — ArcheionOS" }
 
 export default async function NewInvoicePage({
   searchParams,

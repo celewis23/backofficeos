@@ -14,7 +14,7 @@ export async function sendEmail({
   to,
   subject,
   react,
-  from = `BackOfficeOS <noreply@${process.env.EMAIL_DOMAIN ?? "backoffice.os"}>`,
+  from = `ArcheionOS <noreply@${process.env.EMAIL_DOMAIN ?? "backoffice.os"}>`,
   replyTo,
 }: SendEmailOptions) {
   const { data, error } = await resend.emails.send({

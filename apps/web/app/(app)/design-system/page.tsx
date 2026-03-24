@@ -129,7 +129,7 @@ export default function DesignSystemPage() {
           <div className="space-y-2 pb-2">
             <div className="flex items-center gap-2">
               <Sparkles className="size-5 text-primary" />
-              <h1 className="text-2xl font-bold">BackOfficeOS Design System</h1>
+              <h1 className="text-2xl font-bold">ArcheionOS Design System</h1>
             </div>
             <p className="text-muted-foreground">
               The complete component library, color tokens, and design language that powers the platform.

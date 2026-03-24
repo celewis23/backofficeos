@@ -13,17 +13,17 @@ export function InviteEmail({ inviterName, orgName, role, inviteUrl, expiresAt }
   return (
     <Html>
       <Head />
-      <Preview>{inviterName} invited you to join {orgName} on BackOfficeOS</Preview>
+      <Preview>{inviterName} invited you to join {orgName} on ArcheionOS</Preview>
       <Body style={main}>
         <Container style={container}>
           <Heading style={h1}>You&apos;re invited</Heading>
           <Text style={text}>
             <strong>{inviterName}</strong> has invited you to join{" "}
-            <strong>{orgName}</strong> on BackOfficeOS as a{" "}
+            <strong>{orgName}</strong> on ArcheionOS as a{" "}
             <strong>{role}</strong>.
           </Text>
           <Text style={text}>
-            BackOfficeOS is an all-in-one business operating system for managing
+            ArcheionOS is an all-in-one business operating system for managing
             clients, projects, billing, and more.
           </Text>
           <div style={{ textAlign: "center", margin: "32px 0" }}>

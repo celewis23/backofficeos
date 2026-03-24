@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-export const metadata: Metadata = { title: "Welcome to BackOfficeOS" }
+export const metadata: Metadata = { title: "Welcome to ArcheionOS" }
 
 export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -9,7 +9,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="flex size-8 items-center justify-center rounded-lg bg-primary">
             <Building2 className="size-4 text-white" />
           </div>
-          <span className="text-lg font-semibold text-white">BackOfficeOS</span>
+          <span className="text-lg font-semibold text-white">ArcheionOS</span>
         </div>
 
         <div className="space-y-4">
@@ -26,7 +26,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         <p className="text-xs text-zinc-600">
-          &copy; {new Date().getFullYear()} BackOfficeOS. All rights reserved.
+          &copy; {new Date().getFullYear()} ArcheionOS. All rights reserved.
         </p>
 
         {/* Background decoration */}
@@ -44,7 +44,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary">
               <Building2 className="size-3.5 text-white" />
             </div>
-            <span className="font-semibold">BackOfficeOS</span>
+            <span className="font-semibold">ArcheionOS</span>
           </div>
           {children}
         </div>

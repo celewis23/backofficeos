@@ -2,7 +2,7 @@ import { requireOrg } from "@/lib/auth-server"
 import { db } from "@backoffice-os/database"
 import { CalendarClient } from "./calendar-client"
 
-export const metadata = { title: "Calendar — BackOfficeOS" }
+export const metadata = { title: "Calendar — ArcheionOS" }
 
 export default async function CalendarPage() {
   const { orgId } = await requireOrg()

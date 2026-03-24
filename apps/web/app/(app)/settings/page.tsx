@@ -3,7 +3,7 @@ import { auth } from "@backoffice-os/auth"
 import { headers } from "next/headers"
 import { SettingsClient } from "./settings-client"
 
-export const metadata = { title: "Settings — BackOfficeOS" }
+export const metadata = { title: "Settings — ArcheionOS" }
 
 export default async function SettingsPage() {
   const { session, orgId } = await requireOrg()

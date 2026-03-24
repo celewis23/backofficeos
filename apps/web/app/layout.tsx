@@ -6,8 +6,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "BackOfficeOS",
-    template: "%s — BackOfficeOS",
+    default: "ArcheionOS",
+    template: "%s — ArcheionOS",
   },
   description: "The operating system for your business. Everything your team needs in one place.",
   icons: {

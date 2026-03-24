@@ -59,7 +59,7 @@ export function PaymentReminderEmail({
           </div>
           <Hr style={{ borderColor: "#e6e6e6" }} />
           <Text style={footer}>
-            If you&apos;ve already paid, please disregard this email. Sent by {orgName} via BackOfficeOS.
+            If you&apos;ve already paid, please disregard this email. Sent by {orgName} via ArcheionOS.
           </Text>
         </Container>
       </Body>

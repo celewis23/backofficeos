@@ -254,7 +254,7 @@ function AppearanceSection() {
     <div className="space-y-6">
       <div>
         <h2 className="text-base font-semibold">Appearance</h2>
-        <p className="text-sm text-muted-foreground mt-0.5">Customize how BackOfficeOS looks</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Customize how ArcheionOS looks</p>
       </div>
       <Separator />
 
@@ -284,7 +284,7 @@ function BillingSection({ organization }: { organization: any }) {
     <div className="space-y-6">
       <div>
         <h2 className="text-base font-semibold">Plan & Billing</h2>
-        <p className="text-sm text-muted-foreground mt-0.5">Manage your BackOfficeOS subscription</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Manage your ArcheionOS subscription</p>
       </div>
       <Separator />
 

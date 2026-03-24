@@ -2,7 +2,7 @@ import { requireOrg } from "@/lib/auth-server"
 import { db } from "@backoffice-os/database"
 import { BillingClient } from "./billing-client"
 
-export const metadata = { title: "Billing — BackOfficeOS" }
+export const metadata = { title: "Billing — ArcheionOS" }
 
 export default async function BillingPage() {
   const { orgId } = await requireOrg()

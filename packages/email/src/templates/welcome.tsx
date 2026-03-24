@@ -24,13 +24,13 @@ export function WelcomeEmail({ userName, orgName, loginUrl }: WelcomeEmailProps)
   return (
     <Html>
       <Head />
-      <Preview>Welcome to BackOfficeOS — your business operating system</Preview>
+      <Preview>Welcome to ArcheionOS — your business operating system</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Heading style={h1}>Welcome to BackOfficeOS</Heading>
+          <Heading style={h1}>Welcome to ArcheionOS</Heading>
           <Text style={text}>Hi {userName},</Text>
           <Text style={text}>
-            Your workspace <strong>{orgName}</strong> is ready. BackOfficeOS
+            Your workspace <strong>{orgName}</strong> is ready. ArcheionOS
             brings all your business tools — billing, projects, clients,
             scheduling, and more — into one place.
           </Text>
@@ -41,7 +41,7 @@ export function WelcomeEmail({ userName, orgName, loginUrl }: WelcomeEmailProps)
           </Section>
           <Hr style={hr} />
           <Text style={footer}>
-            You&apos;re receiving this because you signed up for BackOfficeOS.
+            You&apos;re receiving this because you signed up for ArcheionOS.
             <Link href="https://backoffice.os/unsubscribe" style={link}>
               {" "}
               Unsubscribe

@@ -3,7 +3,7 @@ import { auth } from "@backoffice-os/auth"
 import { headers } from "next/headers"
 import { TeamClient } from "./team-client"
 
-export const metadata = { title: "Team — BackOfficeOS" }
+export const metadata = { title: "Team — ArcheionOS" }
 
 export default async function TeamPage() {
   const { orgId } = await requireOrg()

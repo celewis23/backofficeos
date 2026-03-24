@@ -111,7 +111,7 @@ export default function OnboardingPage() {
         <div className="size-8 rounded-lg bg-primary flex items-center justify-center">
           <Building2 className="size-4 text-primary-foreground" />
         </div>
-        <span className="font-semibold text-lg">BackOfficeOS</span>
+        <span className="font-semibold text-lg">ArcheionOS</span>
       </div>
 
       {/* Progress */}
@@ -191,7 +191,7 @@ function WorkspaceStep({
       <div>
         <h1 className="text-xl font-semibold">Set up your workspace</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Tell us a bit about your business so we can tailor BackOfficeOS for you.
+          Tell us a bit about your business so we can tailor ArcheionOS for you.
         </p>
       </div>
 
@@ -395,7 +395,7 @@ function DoneStep({ loading, onFinish }: { loading: boolean; onFinish: () => voi
 
       <Button className="w-full gap-2" size="lg" loading={loading} onClick={onFinish}>
         <Zap className="size-4" />
-        Launch BackOfficeOS
+        Launch ArcheionOS
       </Button>
     </div>
   )

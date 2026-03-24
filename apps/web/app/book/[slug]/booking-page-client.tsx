@@ -249,7 +249,7 @@ export function BookingPageClient({ page, slots }: { page: PageInfo; slots: Slot
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          Powered by <span className="font-medium">BackOfficeOS</span>
+          Powered by <span className="font-medium">ArcheionOS</span>
         </p>
       </div>
     </div>
