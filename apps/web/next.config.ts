@@ -1,6 +1,9 @@
-import type { NextConfig } from "next";
+import path from "node:path"
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: path.join(__dirname, "../.."),
+  serverExternalPackages: ["@prisma/client", "prisma"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**.googleapis.com" },
@@ -11,6 +14,6 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts", "@radix-ui/react-icons"],
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig
