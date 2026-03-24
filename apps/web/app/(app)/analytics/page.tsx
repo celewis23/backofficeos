@@ -123,10 +123,10 @@ export default async function AnalyticsPage() {
       clients={{
         total: totalClients,
         newThisMonth: newClientsThisMonth,
-        byStatus: clientsByStatus.map((s) => ({ status: s.status, count: s._count.id })),
+        byStatus: clientsByStatus.map((s: (typeof clientsByStatus)[number]) => ({ status: s.status, count: s._count.id })),
       }}
       invoices={{
-        byStatus: invoiceStats.map((s) => ({
+        byStatus: invoiceStats.map((s: (typeof invoiceStats)[number]) => ({
           status: s.status,
           count: s._count.id,
           total: Number(s._sum.total ?? 0),
