@@ -131,7 +131,7 @@ export default async function AnalyticsPage() {
           count: s._count.id,
           total: Number(s._sum.total ?? 0),
         })),
-        overdue: overdueInvoices.map((inv) => ({
+        overdue: overdueInvoices.map((inv: (typeof overdueInvoices)[number]) => ({
           id: inv.id,
           number: inv.number,
           client: inv.client?.name ?? "—",
@@ -140,16 +140,16 @@ export default async function AnalyticsPage() {
         })),
       }}
       projects={{
-        byStatus: projectStats.map((s) => ({ status: s.status, count: s._count.id })),
-        recentlyCompleted: recentlyCompleted.map((p) => ({
+        byStatus: projectStats.map((s: (typeof projectStats)[number]) => ({ status: s.status, count: s._count.id })),
+        recentlyCompleted: recentlyCompleted.map((p: (typeof recentlyCompleted)[number]) => ({
           id: p.id,
           name: p.name,
           completedAt: p.updatedAt.toISOString(),
         })),
       }}
       topClients={topClientDetails
-        .filter((tc) => tc.client)
-        .map((tc) => ({ id: tc.client!.id, name: tc.client!.name, revenue: tc.revenue }))}
+        .filter((tc: (typeof topClientDetails)[number]) => tc.client)
+        .map((tc: (typeof topClientDetails)[number]) => ({ id: tc.client!.id, name: tc.client!.name, revenue: tc.revenue }))}
     />
   )
 }
