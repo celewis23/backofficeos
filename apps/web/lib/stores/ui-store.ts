@@ -16,6 +16,7 @@ interface UIStore {
   // AI assistant panel
   aiPanelOpen: boolean;
   setAiPanelOpen: (open: boolean) => void;
+  setAIPanelOpen: (open: boolean) => void;
   toggleAiPanel: () => void;
 
   // Current context (for AI assistant awareness)
@@ -40,6 +41,7 @@ export const useUIStore = create<UIStore>()(
 
       aiPanelOpen: false,
       setAiPanelOpen: (open) => set({ aiPanelOpen: open }),
+      setAIPanelOpen: (open) => set({ aiPanelOpen: open }),
       toggleAiPanel: () => set((s) => ({ aiPanelOpen: !s.aiPanelOpen })),
 
       pageContext: {

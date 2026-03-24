@@ -19,9 +19,15 @@ import {
   Building2,
   Bell,
   LogOut,
+  BarChart3,
+  Briefcase,
+  Target,
+  Clock,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, initials } from "@/lib/utils";
 import { useUIStore } from "@/lib/stores/ui-store";
+import { useSession, signOut } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -36,14 +42,18 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const NAV_ITEMS = [
-  { href: "/dashboard",     icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/clients",       icon: Users2,          label: "Clients",      badge: null },
-  { href: "/billing",       icon: CreditCard,       label: "Billing",      badge: "3" },
-  { href: "/projects",      icon: Folders,          label: "Projects" },
-  { href: "/inbox",         icon: Inbox,            label: "Inbox",        badge: "12" },
-  { href: "/calendar",      icon: Calendar,         label: "Calendar" },
-  { href: "/documents",     icon: FileText,         label: "Documents" },
-  { href: "/team",          icon: UsersRound,       label: "Team" },
+  { href: "/dashboard",   icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/clients",     icon: Users2,           label: "Clients" },
+  { href: "/crm",         icon: Target,           label: "CRM Pipeline" },
+  { href: "/billing",     icon: CreditCard,       label: "Billing" },
+  { href: "/projects",    icon: Folders,          label: "Projects" },
+  { href: "/inbox",       icon: Inbox,            label: "Inbox" },
+  { href: "/calendar",    icon: Calendar,         label: "Calendar" },
+  { href: "/scheduling",  icon: Clock,            label: "Scheduling" },
+  { href: "/documents",   icon: FileText,         label: "Documents" },
+  { href: "/hr",          icon: Briefcase,        label: "HR & Team" },
+  { href: "/analytics",   icon: BarChart3,        label: "Analytics" },
+  { href: "/team",        icon: UsersRound,       label: "Team" },
 ] as const;
 
 const BOTTOM_NAV = [
@@ -117,7 +127,16 @@ function NavItem({
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { sidebarCollapsed, toggleSidebar, setAiPanelOpen } = useUIStore();
+  const { data: session } = useSession();
+  const user = session?.user;
+
+  async function handleSignOut() {
+    await signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <aside
@@ -204,15 +223,15 @@ export function Sidebar() {
                 )}
               >
                 <Avatar size="sm">
-                  <AvatarImage src="" />
+                  <AvatarImage src={user?.image ?? ""} />
                   <AvatarFallback className="bg-primary/20 text-primary text-[11px] font-semibold">
-                    JD
+                    {initials(user?.name ?? "?")}
                   </AvatarFallback>
                 </Avatar>
                 {!sidebarCollapsed && (
                   <div className="min-w-0 flex-1 text-left">
-                    <p className="truncate text-xs font-medium text-sidebar-foreground">Jane Doe</p>
-                    <p className="truncate text-[10px] text-sidebar-muted-foreground">jane@acme.com</p>
+                    <p className="truncate text-xs font-medium text-sidebar-foreground">{user?.name ?? "Loading..."}</p>
+                    <p className="truncate text-[10px] text-sidebar-muted-foreground">{user?.email ?? ""}</p>
                   </div>
                 )}
               </button>
@@ -220,19 +239,19 @@ export function Sidebar() {
             <DropdownMenuContent side="top" align="start" className="w-52">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col gap-0.5">
-                  <span className="font-medium text-sm">Jane Doe</span>
-                  <span className="text-xs text-muted-foreground">jane@acme.com</span>
+                  <span className="font-medium text-sm">{user?.name}</span>
+                  <span className="text-xs text-muted-foreground">{user?.email}</span>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Settings className="size-4" /> Settings
+              <DropdownMenuItem asChild>
+                <Link href="/settings"><Settings className="size-4" /> Settings</Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Bell className="size-4" /> Notifications
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem destructive>
+              <DropdownMenuItem destructive onClick={handleSignOut}>
                 <LogOut className="size-4" /> Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>

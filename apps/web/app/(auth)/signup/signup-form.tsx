@@ -1,15 +1,16 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { User, Mail, Lock, Building2 } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import * as React from "react"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { User, Mail, Lock, Building2 } from "lucide-react"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { signUp, organization } from "@/lib/auth-client"
 
 const schema = z.object({
   name: z.string().min(2, "Enter your full name"),
@@ -20,26 +21,52 @@ const schema = z.object({
     .min(8, "Password must be at least 8 characters")
     .regex(/[A-Z]/, "Include at least one uppercase letter")
     .regex(/[0-9]/, "Include at least one number"),
-});
+})
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<typeof schema>
+
+function toSlug(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+}
 
 export function SignupForm() {
-  const router = useRouter();
+  const router = useRouter()
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
   async function onSubmit(values: FormValues) {
-    try {
-      await new Promise((r) => setTimeout(r, 800)); // placeholder
-      router.push("/dashboard");
-    } catch {
-      toast.error("Something went wrong. Please try again.");
+    // 1. Create the user account
+    const { data: signUpData, error: signUpError } = await signUp.email({
+      name: values.name,
+      email: values.email,
+      password: values.password,
+    })
+
+    if (signUpError) {
+      toast.error(signUpError.message ?? "Failed to create account")
+      return
     }
+
+    // 2. Create the organization
+    const { error: orgError } = await organization.create({
+      name: values.orgName,
+      slug: toSlug(values.orgName),
+    })
+
+    if (orgError) {
+      toast.error("Account created but failed to set up workspace. Please try again.")
+      return
+    }
+
+    router.push("/onboarding")
+    router.refresh()
   }
 
   return (
@@ -103,10 +130,10 @@ export function SignupForm() {
 
       <p className="text-center text-xs text-muted-foreground">
         By creating an account you agree to our{" "}
-        <a href="#" className="underline underline-offset-2 hover:text-foreground">Terms</a>
+        <a href="/terms" className="underline underline-offset-2 hover:text-foreground">Terms</a>
         {" "}and{" "}
-        <a href="#" className="underline underline-offset-2 hover:text-foreground">Privacy Policy</a>.
+        <a href="/privacy" className="underline underline-offset-2 hover:text-foreground">Privacy Policy</a>.
       </p>
     </form>
-  );
+  )
 }
