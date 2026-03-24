@@ -10,6 +10,15 @@ const withUrlProtocol = (value: string | undefined, fallback: string) => {
     : `https://${candidate}`
 }
 
+const trustedOrigins = Array.from(
+  new Set([
+    withUrlProtocol(process.env.NEXT_PUBLIC_APP_URL, "http://localhost:3000"),
+    withUrlProtocol(process.env.NEXT_PUBLIC_PORTAL_URL, "http://localhost:3001"),
+    "http://localhost:3000",
+    "http://localhost:3001",
+  ])
+)
+
 export const auth = betterAuth({
   baseURL: withUrlProtocol(
     process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL,
@@ -78,10 +87,7 @@ export const auth = betterAuth({
     },
   },
 
-  trustedOrigins: [
-    withUrlProtocol(process.env.NEXT_PUBLIC_APP_URL, "http://localhost:3000"),
-    withUrlProtocol(process.env.NEXT_PUBLIC_PORTAL_URL, "http://localhost:3001"),
-  ],
+  trustedOrigins,
 })
 
 export type Auth = typeof auth
