@@ -3,7 +3,15 @@ import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname, "../.."),
-  serverExternalPackages: ["@prisma/client", "prisma"],
+  serverExternalPackages: ["@prisma/client", "prisma", "@backoffice-os/database"],
+  outputFileTracingIncludes: {
+    "/*": [
+      "../../node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client/**/*",
+      "../../node_modules/.pnpm/@prisma+client*/node_modules/@prisma/client/**/*",
+      "../../node_modules/.prisma/client/**/*",
+      "../../packages/database/prisma/**/*",
+    ],
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**.googleapis.com" },
