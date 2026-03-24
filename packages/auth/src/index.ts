@@ -3,6 +3,13 @@ import { prismaAdapter } from "better-auth/adapters/prisma"
 import { organization } from "better-auth/plugins"
 import { db } from "@backoffice-os/database"
 
+const withUrlProtocol = (value: string | undefined, fallback: string) => {
+  const candidate = value?.trim() || fallback
+  return /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(candidate)
+    ? candidate
+    : `https://${candidate}`
+}
+
 export const auth = betterAuth({
   database: prismaAdapter(db, {
     provider: "postgresql",
@@ -68,8 +75,8 @@ export const auth = betterAuth({
   },
 
   trustedOrigins: [
-    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-    process.env.NEXT_PUBLIC_PORTAL_URL ?? "http://localhost:3001",
+    withUrlProtocol(process.env.NEXT_PUBLIC_APP_URL, "http://localhost:3000"),
+    withUrlProtocol(process.env.NEXT_PUBLIC_PORTAL_URL, "http://localhost:3001"),
   ],
 })
 
