@@ -35,8 +35,8 @@ const TYPE_COLORS: Record<string, string> = {
   SUBSCRIPTION: "bg-purple-500/10 text-purple-600",
 }
 
-function formatPrice(price: string | number, currency: string) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(Number(price))
+function formatPrice(price: { toString(): string } | string | number, currency: string) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(Number(price.toString()))
 }
 
 export function CatalogClient({ products: initial }: { products: Product[] }) {
