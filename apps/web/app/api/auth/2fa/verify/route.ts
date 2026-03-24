@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const { code } = await request.json()
 
     const record = await db.userTwoFactor.findUnique({ where: { userId } })
-    if (!record) {
+    if (!record || !record.secret) {
       return NextResponse.json({ error: "No 2FA setup in progress" }, { status: 400 })
     }
 
