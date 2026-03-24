@@ -21,7 +21,7 @@ type Product = {
   description: string | null
   sku: string | null
   type: "SERVICE" | "PRODUCT" | "SUBSCRIPTION"
-  unitPrice: string | number
+  unitPrice: { toString(): string } | string | number
   currency: string
   taxable: boolean
   unit: string | null
