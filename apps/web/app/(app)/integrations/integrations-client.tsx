@@ -30,14 +30,18 @@ const INTEGRATIONS: IntegrationDef[] = [
   { provider: "SALESFORCE", name: "Salesforce", description: "Enterprise CRM sync", category: "CRM", logo: "SF" },
   { provider: "DOCUSIGN", name: "DocuSign", description: "Alternative e-signature provider", category: "Documents", logo: "DS" },
   { provider: "HELLOSIGN", name: "HelloSign", description: "Alternative e-signature provider", category: "Documents", logo: "HS" },
-  { provider: "SLACK", name: "Slack", description: "Send notifications to Slack channels", category: "Communication", logo: "Sl" },
+  { provider: "SLACK", name: "Slack", description: "Team notifications, client updates, and workflow alerts", category: "Communication", logo: "Sl" },
   { provider: "ZOOM", name: "Zoom", description: "Auto-create Zoom links for bookings", category: "Communication", logo: "Z" },
   { provider: "TWILIO", name: "Twilio", description: "SMS and voice for client communication", category: "Communication", logo: "T" },
   { provider: "ZAPIER", name: "Zapier", description: "Connect 5,000+ apps via Zapier", category: "Automation", logo: "Zp" },
   { provider: "MAKE", name: "Make", description: "Advanced workflow automation", category: "Automation", logo: "Mk" },
+  { provider: "MEETUP", name: "Meetup", description: "Sync your Meetup groups and events to your calendar", category: "Community", logo: "Mu" },
+  { provider: "EVENTBRITE", name: "Eventbrite", description: "Import and manage Eventbrite events alongside your schedule", category: "Community", logo: "Eb" },
+  { provider: "FACEBOOK", name: "Facebook Groups & Events", description: "Sync Facebook Group events and manage RSVPs from one place", category: "Community", logo: "Fb" },
+  { provider: "DISCORD", name: "Discord", description: "Send announcements and updates to your Discord community", category: "Community", logo: "Dc" },
 ]
 
-const CATEGORIES = ["Productivity", "Payments", "Accounting", "Scheduling", "CRM", "Documents", "Communication", "Automation"]
+const CATEGORIES = ["Productivity", "Payments", "Accounting", "Scheduling", "CRM", "Documents", "Communication", "Community", "Automation"]
 
 const STATUS_CONFIG: Record<IntegrationStatus, { label: string; icon: React.ElementType; class: string }> = {
   CONNECTED: { label: "Connected", icon: CheckCircle2, class: "text-green-500" },

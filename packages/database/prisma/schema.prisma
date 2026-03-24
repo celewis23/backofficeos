@@ -1078,6 +1078,10 @@ enum IntegrationProvider {
   TWILIO
   ZAPIER
   MAKE
+  MEETUP
+  EVENTBRITE
+  FACEBOOK
+  DISCORD
 }
 
 enum IntegrationStatus {
