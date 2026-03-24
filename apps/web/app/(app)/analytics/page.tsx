@@ -108,8 +108,8 @@ export default async function AnalyticsPage() {
     const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)
     const label = start.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
     const revenue = revenueByMonth
-      .filter((inv) => inv.paidAt && inv.paidAt >= start && inv.paidAt < end)
-      .reduce((sum, inv) => sum + Number(inv.total), 0)
+      .filter((inv: (typeof revenueByMonth)[number]) => inv.paidAt && inv.paidAt >= start && inv.paidAt < end)
+      .reduce((sum: number, inv: (typeof revenueByMonth)[number]) => sum + Number(inv.total), 0)
     monthlyRevenue.push({ month: label, revenue })
   }
 
