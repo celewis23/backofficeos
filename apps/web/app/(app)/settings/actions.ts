@@ -227,7 +227,7 @@ export async function deleteClientData(clientId: string) {
       email: null,
       phone: null,
       website: null,
-      address: null,
+      address: undefined,
       notes: null,
       avatar: null,
       status: "ARCHIVED",
