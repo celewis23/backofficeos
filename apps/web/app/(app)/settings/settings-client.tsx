@@ -1122,9 +1122,9 @@ function GdprSection({ requests: initial }: { requests: GdprRequest[] }) {
 
   async function handleSubmit() {
     setSubmitting(true)
-    const result = await submitGdprRequest(type, undefined, notes)
+    const result = await submitGdprRequest(type, undefined, notes) as { success?: boolean; error?: string }
     setSubmitting(false)
-    if (result.error) { toast.error((result as { error: string }).error); return }
+    if (result.error) { toast.error(result.error); return }
     toast.success("GDPR request submitted")
     setNotes("")
     window.location.reload()
