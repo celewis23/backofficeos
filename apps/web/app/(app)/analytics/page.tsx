@@ -13,6 +13,18 @@ export default async function AnalyticsPage() {
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
 
+  // Expense stats
+  const [expensesThisMonth, expensesLastMonth] = await Promise.all([
+    db.expense.aggregate({
+      where: { organizationId: orgId, date: { gte: thisMonthStart } },
+      _sum: { amount: true },
+    }),
+    db.expense.aggregate({
+      where: { organizationId: orgId, date: { gte: lastMonthStart, lt: thisMonthStart } },
+      _sum: { amount: true },
+    }),
+  ])
+
   // Revenue stats
   const [revenueThisMonth, revenueLastMonth, revenueByMonth] = await Promise.all([
     db.invoice.aggregate({
@@ -150,6 +162,10 @@ export default async function AnalyticsPage() {
       topClients={topClientDetails
         .filter((tc: (typeof topClientDetails)[number]) => tc.client)
         .map((tc: (typeof topClientDetails)[number]) => ({ id: tc.client!.id, name: tc.client!.name, revenue: tc.revenue }))}
+      expenses={{
+        thisMonth: Number(expensesThisMonth._sum.amount ?? 0),
+        lastMonth: Number(expensesLastMonth._sum.amount ?? 0),
+      }}
     />
   )
 }

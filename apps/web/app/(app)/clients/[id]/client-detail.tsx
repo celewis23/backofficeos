@@ -5,7 +5,7 @@ import Link from "next/link"
 import {
   Building2, Mail, Phone, Globe, MapPin, Tag, Plus,
   FileText, FolderKanban, Clock, MessageSquare, ArrowLeft,
-  MoreHorizontal, Edit2, Trash2, Users, ChevronRight,
+  MoreHorizontal, Edit2, Trash2, Users, ChevronRight, Link2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { toast } from "sonner"
 import { formatCurrency, formatDate, initials } from "@/lib/utils"
 import type { Client, Contact, Invoice, Project, ClientActivity, ClientTag, Tag as TagModel, InvoiceStatus, ProjectStatus } from "@backoffice-os/database"
 
@@ -44,6 +45,28 @@ const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
 }
 
 export function ClientDetail({ client }: { client: ClientWithRelations }) {
+  const [sendingPortal, setSendingPortal] = React.useState(false)
+
+  async function handleSendPortalLink() {
+    setSendingPortal(true)
+    try {
+      const res = await fetch("/api/portal/send-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId: client.id }),
+      })
+      const data = await res.json()
+      if (data.portalUrl) {
+        await navigator.clipboard.writeText(data.portalUrl)
+        toast.success("Portal link copied to clipboard")
+      } else {
+        toast.error(data.error ?? "Failed to generate portal link")
+      }
+    } finally {
+      setSendingPortal(false)
+    }
+  }
+
   const totalBilled = client.invoices.reduce((sum, inv) => sum + Number(inv.total), 0)
   const totalPaid = client.invoices
     .filter((inv) => inv.status === "PAID")
@@ -75,6 +98,10 @@ export function ClientDetail({ client }: { client: ClientWithRelations }) {
           )}
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleSendPortalLink} disabled={sendingPortal}>
+            <Link2 className="size-3.5" />
+            {sendingPortal ? "Generating..." : "Portal link"}
+          </Button>
           <Button variant="outline" size="sm" className="gap-1.5">
             <FileText className="size-3.5" />
             New invoice

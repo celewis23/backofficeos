@@ -42,6 +42,8 @@ export function LoginForm() {
       if (error) {
         toast.error(error.message ?? "Invalid email or password")
       } else {
+        // Fire-and-forget: log the login event
+        fetch("/api/auth/log-login", { method: "POST" }).catch(() => {})
         router.push(callbackUrl)
         router.refresh()
       }

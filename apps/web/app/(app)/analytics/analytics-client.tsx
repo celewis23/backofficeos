@@ -31,6 +31,7 @@ interface AnalyticsClientProps {
     recentlyCompleted: { id: string; name: string; completedAt: string }[]
   }
   topClients: { id: string; name: string; revenue: number }[]
+  expenses: { thisMonth: number; lastMonth: number }
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -92,7 +93,7 @@ function DonutSegments({ segments }: {
 }
 
 export function AnalyticsClient({
-  revenue, clients, invoices, projects, topClients,
+  revenue, clients, invoices, projects, topClients, expenses,
 }: AnalyticsClientProps) {
   const revenueChange = revenue.lastMonth > 0
     ? ((revenue.thisMonth - revenue.lastMonth) / revenue.lastMonth) * 100
@@ -204,6 +205,45 @@ export function AnalyticsClient({
               </CardContent>
             </Card>
           </div>
+
+          {/* P&L summary */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold">Profit & Loss (MTD)</CardTitle>
+              <CardDescription>Revenue minus expenses this month</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 divide-x divide-border">
+                <div className="pr-6">
+                  <p className="text-xs font-medium text-muted-foreground">Revenue</p>
+                  <p className="text-xl font-bold mt-1 text-green-600 dark:text-green-400">{formatCurrency(revenue.thisMonth)}</p>
+                  {revenue.lastMonth > 0 && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {revenue.lastMonth > 0 ? `${((revenue.thisMonth - revenue.lastMonth) / revenue.lastMonth * 100).toFixed(1)}% vs last month` : ""}
+                    </p>
+                  )}
+                </div>
+                <div className="px-6">
+                  <p className="text-xs font-medium text-muted-foreground">Expenses</p>
+                  <p className="text-xl font-bold mt-1 text-red-500">{formatCurrency(expenses.thisMonth)}</p>
+                  {expenses.lastMonth > 0 && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {`${((expenses.thisMonth - expenses.lastMonth) / expenses.lastMonth * 100).toFixed(1)}% vs last month`}
+                    </p>
+                  )}
+                </div>
+                <div className="pl-6">
+                  <p className="text-xs font-medium text-muted-foreground">Net P&L</p>
+                  <p className={`text-xl font-bold mt-1 ${revenue.thisMonth - expenses.thisMonth >= 0 ? "text-foreground" : "text-destructive"}`}>
+                    {formatCurrency(revenue.thisMonth - expenses.thisMonth)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {revenue.thisMonth > 0 ? `${(((revenue.thisMonth - expenses.thisMonth) / revenue.thisMonth) * 100).toFixed(1)}% margin` : "—"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Revenue chart + Top clients */}
           <div className="grid gap-6 lg:grid-cols-3">

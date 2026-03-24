@@ -12,18 +12,23 @@ export default async function NewInvoicePage({
   const { orgId } = await requireOrg()
   const { clientId } = await searchParams
 
-  const clients = await db.client.findMany({
-    where: { organizationId: orgId, status: { not: "ARCHIVED" } },
-    select: { id: true, name: true, email: true, currency: true, paymentTerms: true },
-    orderBy: { name: "asc" },
-  })
-
-  // Auto-number the next invoice
-  const lastInvoice = await db.invoice.findFirst({
-    where: { organizationId: orgId },
-    orderBy: { createdAt: "desc" },
-    select: { number: true },
-  })
+  const [clients, catalogItems, lastInvoice] = await Promise.all([
+    db.client.findMany({
+      where: { organizationId: orgId, status: { not: "ARCHIVED" } },
+      select: { id: true, name: true, email: true, currency: true, paymentTerms: true },
+      orderBy: { name: "asc" },
+    }),
+    db.product.findMany({
+      where: { organizationId: orgId, isActive: true },
+      select: { id: true, name: true, unitPrice: true, unit: true, description: true },
+      orderBy: { name: "asc" },
+    }),
+    db.invoice.findFirst({
+      where: { organizationId: orgId },
+      orderBy: { createdAt: "desc" },
+      select: { number: true },
+    }),
+  ])
 
   const nextNumber = generateNextNumber(lastInvoice?.number)
 
@@ -33,6 +38,7 @@ export default async function NewInvoicePage({
       defaultClientId={clientId}
       nextNumber={nextNumber}
       orgId={orgId}
+      catalogItems={catalogItems.map((p) => ({ id: p.id, name: p.name, unitPrice: Number(p.unitPrice), unit: p.unit, description: p.description }))}
     />
   )
 }

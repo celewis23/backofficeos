@@ -26,6 +26,7 @@ export default async function DashboardPage() {
   const [
     revenueThisMonth,
     revenueLastMonth,
+    expensesThisMonth,
     totalClients,
     activeProjects,
     overdueInvoices,
@@ -44,6 +45,10 @@ export default async function DashboardPage() {
         paidAt: { gte: lastMonthStart, lt: thisMonthStart },
       },
       _sum: { total: true },
+    }),
+    db.expense.aggregate({
+      where: { organizationId: orgId, date: { gte: thisMonthStart } },
+      _sum: { amount: true },
     }),
     db.client.count({ where: { organizationId: orgId, status: { in: ["ACTIVE", "PROSPECT"] } } }),
     db.project.count({
@@ -89,6 +94,8 @@ export default async function DashboardPage() {
 
   const revenueThis = Number(revenueThisMonth._sum.total ?? 0)
   const revenueLast = Number(revenueLastMonth._sum.total ?? 0)
+  const expensesThis = Number(expensesThisMonth._sum.amount ?? 0)
+  const netThis = revenueThis - expensesThis
   const revenueChange = revenueLast > 0
     ? ((revenueThis - revenueLast) / revenueLast) * 100
     : 0
@@ -177,6 +184,28 @@ export default async function DashboardPage() {
             </Card>
           ))}
         </div>
+
+        {/* P&L summary */}
+        <Card>
+          <CardContent className="pt-5 pb-4">
+            <div className="grid grid-cols-3 divide-x divide-border">
+              <div className="pr-6">
+                <p className="text-xs font-medium text-muted-foreground">Revenue (MTD)</p>
+                <p className="text-xl font-bold mt-1 text-green-600 dark:text-green-400">{formatCurrency(revenueThis)}</p>
+              </div>
+              <div className="px-6">
+                <p className="text-xs font-medium text-muted-foreground">Expenses (MTD)</p>
+                <p className="text-xl font-bold mt-1 text-red-500">{formatCurrency(expensesThis)}</p>
+              </div>
+              <div className="pl-6">
+                <p className="text-xs font-medium text-muted-foreground">Net P&L (MTD)</p>
+                <p className={`text-xl font-bold mt-1 ${netThis >= 0 ? "text-foreground" : "text-destructive"}`}>
+                  {formatCurrency(netThis)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Main grid */}
         <div className="grid gap-6 lg:grid-cols-3">

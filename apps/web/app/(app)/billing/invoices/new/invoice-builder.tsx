@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useFieldArray, useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { Plus, Trash2, ArrowLeft, Send, Save, GripVertical } from "lucide-react"
+import { Plus, Trash2, ArrowLeft, Send, Save, GripVertical, Package } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,9 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { formatCurrency } from "@/lib/utils"
@@ -46,6 +49,7 @@ interface InvoiceBuilderProps {
   defaultClientId?: string
   nextNumber: string
   orgId: string
+  catalogItems?: { id: string; name: string; unitPrice: number; unit: string | null; description: string | null }[]
 }
 
 export function InvoiceBuilder({
@@ -53,6 +57,7 @@ export function InvoiceBuilder({
   defaultClientId,
   nextNumber,
   orgId,
+  catalogItems = [],
 }: InvoiceBuilderProps) {
   const router = useRouter()
   const today = new Date().toISOString().split("T")[0]
@@ -252,16 +257,52 @@ export function InvoiceBuilder({
               })}
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-3 gap-1.5 text-xs"
-              onClick={() => append({ description: "", quantity: 1, unitPrice: 0, taxable: true })}
-            >
-              <Plus className="size-3.5" />
-              Add line item
-            </Button>
+            <div className="mt-3 flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => append({ description: "", quantity: 1, unitPrice: 0, taxable: true })}
+              >
+                <Plus className="size-3.5" />
+                Add line item
+              </Button>
+              {catalogItems.length > 0 && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs">
+                      <Package className="size-3.5" />
+                      From catalog
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-2" align="start">
+                    <p className="text-xs font-medium text-muted-foreground px-2 pb-1.5">Select a catalog item</p>
+                    <div className="space-y-0.5 max-h-60 overflow-y-auto">
+                      {catalogItems.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className="w-full text-left px-2 py-1.5 rounded-md hover:bg-muted transition-colors"
+                          onClick={() => append({
+                            description: item.name + (item.unit ? ` (per ${item.unit})` : ""),
+                            quantity: 1,
+                            unitPrice: item.unitPrice,
+                            taxable: true,
+                          })}
+                        >
+                          <p className="text-xs font-medium">{item.name}</p>
+                          {item.description && (
+                            <p className="text-[10px] text-muted-foreground line-clamp-1">{item.description}</p>
+                          )}
+                          <p className="text-[10px] text-muted-foreground">{formatCurrency(item.unitPrice)}{item.unit ? ` / ${item.unit}` : ""}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
           </div>
 
           <Separator />
