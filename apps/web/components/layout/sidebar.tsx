@@ -24,6 +24,8 @@ import {
   Target,
   Clock,
   Receipt,
+  Workflow,
+  ClipboardList,
 } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
 import { useUIStore } from "@/lib/stores/ui-store";
@@ -45,6 +47,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 const NAV_ITEMS = [
   { href: "/dashboard",   icon: LayoutDashboard, label: "Dashboard" },
   { href: "/clients",     icon: Users2,           label: "Clients" },
+  { href: "/intake-forms", icon: ClipboardList,  label: "Intake Forms" },
   { href: "/crm",         icon: Target,           label: "CRM Pipeline" },
   { href: "/billing",     icon: CreditCard,       label: "Billing" },
   { href: "/projects",    icon: Folders,          label: "Projects" },
@@ -59,8 +62,9 @@ const NAV_ITEMS = [
 ] as const;
 
 const BOTTOM_NAV = [
-  { href: "/integrations",  icon: Zap,      label: "Integrations" },
-  { href: "/settings",      icon: Settings, label: "Settings" },
+  { href: "/automations",  icon: Workflow,  label: "Automations" },
+  { href: "/integrations", icon: Zap,       label: "Integrations" },
+  { href: "/settings",     icon: Settings,  label: "Settings" },
 ] as const;
 
 function NavItem({

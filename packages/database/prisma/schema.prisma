@@ -144,6 +144,14 @@ model Organization {
   expenses       Expense[]
   vendors        Vendor[]
   notifications  Notification[]
+  automations    Automation[]
+  intakeForms    IntakeForm[]
+  customFields   CustomField[]
+  products       Product[]
+  taxRates       TaxRate[]
+  dataExports    DataExportJob[]
+  gdprRequests   GdprRequest[]
+  consentLogs    ConsentLog[]
 
   @@map("organizations")
 }
@@ -1262,12 +1270,13 @@ enum NotificationType {
 // ============================================================
 
 model UserTwoFactor {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  method          String
-  secretEncrypted String?  @db.Text
-  backupCodesJson String?  @db.Text
-  enabledAt       DateTime @default(now())
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  secret      String?  @db.Text
+  enabled     Boolean  @default(false)
+  backupCodes String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1277,8 +1286,8 @@ model UserTwoFactor {
 model LoginEvent {
   id        String   @id @default(cuid())
   userId    String
-  ip        String?
-  device    String?
+  ipAddress String?
+  userAgent String?
   success   Boolean  @default(true)
   createdAt DateTime @default(now())
 
@@ -1286,4 +1295,257 @@ model LoginEvent {
 
   @@index([userId])
   @@map("login_events")
+}
+
+// ============================================================
+// AUTOMATIONS
+// ============================================================
+
+model Automation {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  triggerType    String
+  triggerConfig  Json?
+  actions        Json
+  isActive       Boolean  @default(true)
+  lastRunAt      DateTime?
+  runCount       Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  runs         AutomationRun[]
+
+  @@index([organizationId])
+  @@map("automations")
+}
+
+model AutomationRun {
+  id           String             @id @default(cuid())
+  automationId String
+  status       AutomationRunStatus @default(SUCCESS)
+  entityType   String?
+  entityId     String?
+  log          String?            @db.Text
+  ranAt        DateTime           @default(now())
+
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  @@index([automationId])
+  @@map("automation_runs")
+}
+
+enum AutomationRunStatus {
+  SUCCESS
+  FAILURE
+  SKIPPED
+}
+
+// ============================================================
+// INTAKE FORMS
+// ============================================================
+
+model IntakeForm {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  slug           String
+  description    String?  @db.Text
+  fields         Json
+  isActive       Boolean  @default(true)
+  notifyEmail    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  submissions  IntakeSubmission[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@map("intake_forms")
+}
+
+model IntakeSubmission {
+  id          String   @id @default(cuid())
+  formId      String
+  data        Json
+  ipAddress   String?
+  submittedAt DateTime @default(now())
+
+  form IntakeForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@map("intake_submissions")
+}
+
+// ============================================================
+// CUSTOM FIELDS
+// ============================================================
+
+model CustomField {
+  id             String   @id @default(cuid())
+  organizationId String
+  entityType     String
+  label          String
+  key            String
+  fieldType      String   @default("text")
+  options        Json?
+  required       Boolean  @default(false)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  values       CustomFieldValue[]
+
+  @@unique([organizationId, entityType, key])
+  @@index([organizationId])
+  @@map("custom_fields")
+}
+
+model CustomFieldValue {
+  id       String  @id @default(cuid())
+  fieldId  String
+  entityId String
+  value    String? @db.Text
+
+  field CustomField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@unique([fieldId, entityId])
+  @@index([entityId])
+  @@map("custom_field_values")
+}
+
+// ============================================================
+// PRODUCT / SERVICE CATALOG
+// ============================================================
+
+model Product {
+  id             String      @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?     @db.Text
+  sku            String?
+  type           ProductType @default(SERVICE)
+  unitPrice      Decimal     @db.Decimal(12, 2)
+  currency       String      @default("USD")
+  taxable        Boolean     @default(true)
+  unit           String?
+  isActive       Boolean     @default(true)
+  isRecurring    Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("products")
+}
+
+enum ProductType {
+  SERVICE
+  PRODUCT
+  SUBSCRIPTION
+}
+
+// ============================================================
+// TAX RATES
+// ============================================================
+
+model TaxRate {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  rate           Decimal  @db.Decimal(6, 4)
+  country        String?
+  region         String?
+  isDefault      Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("tax_rates")
+}
+
+// ============================================================
+// DATA EXPORT
+// ============================================================
+
+model DataExportJob {
+  id             String       @id @default(cuid())
+  organizationId String
+  requestedBy    String
+  scope          String[]
+  format         String       @default("csv")
+  status         ExportStatus @default(PENDING)
+  fileUrl        String?
+  expiresAt      DateTime?
+  createdAt      DateTime     @default(now())
+  completedAt    DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("data_export_jobs")
+}
+
+enum ExportStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
+// ============================================================
+// GDPR & COMPLIANCE
+// ============================================================
+
+model GdprRequest {
+  id             String            @id @default(cuid())
+  organizationId String
+  requestedBy    String
+  clientId       String?
+  type           GdprRequestType
+  status         GdprRequestStatus @default(PENDING)
+  notes          String?           @db.Text
+  resolvedAt     DateTime?
+  createdAt      DateTime          @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("gdpr_requests")
+}
+
+enum GdprRequestType {
+  DATA_ACCESS
+  DATA_DELETION
+  DATA_PORTABILITY
+  RECTIFICATION
+}
+
+enum GdprRequestStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+model ConsentLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  clientId       String?
+  type           String
+  grantedAt      DateTime @default(now())
+  ipAddress      String?
+  notes          String?  @db.Text
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("consent_logs")
 }

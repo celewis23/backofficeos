@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /c/Users/cel3m/Userscel3mbackofficeos/apps/web/app/book/[slug]/)",
+      "Bash(ls /c/Users/cel3m/Userscel3mbackofficeos/apps/web/app/\\\\\\(onboarding\\\\\\)/onboarding/)"
+    ]
+  }
+}

@@ -10,6 +10,8 @@ const PUBLIC_PATHS = [
   "/api/inngest",
   "/book",
   "/portal",
+  "/forms",
+  "/api/forms",
   "/onboarding",
   "/_next",
   "/favicon.ico",
