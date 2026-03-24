@@ -23,6 +23,7 @@ import {
   Briefcase,
   Target,
   Clock,
+  Receipt,
 } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
 import { useUIStore } from "@/lib/stores/ui-store";
@@ -51,6 +52,7 @@ const NAV_ITEMS = [
   { href: "/calendar",    icon: Calendar,         label: "Calendar" },
   { href: "/scheduling",  icon: Clock,            label: "Scheduling" },
   { href: "/documents",   icon: FileText,         label: "Documents" },
+  { href: "/expenses",    icon: Receipt,          label: "Expenses" },
   { href: "/hr",          icon: Briefcase,        label: "HR & Team" },
   { href: "/analytics",   icon: BarChart3,        label: "Analytics" },
   { href: "/team",        icon: UsersRound,       label: "Team" },
@@ -125,7 +127,7 @@ function NavItem({
   return item;
 }
 
-export function Sidebar() {
+export function Sidebar({ orgName }: { orgName: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const { sidebarCollapsed, toggleSidebar, setAiPanelOpen } = useUIStore();
@@ -155,7 +157,7 @@ export function Sidebar() {
         </div>
         {!sidebarCollapsed && (
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-sidebar-foreground">Acme Corp</p>
+            <p className="truncate text-sm font-semibold text-sidebar-foreground">{orgName}</p>
             <p className="truncate text-[10px] text-sidebar-muted-foreground">Workspace</p>
           </div>
         )}

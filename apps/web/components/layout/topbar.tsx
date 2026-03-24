@@ -21,6 +21,34 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
+
+function NotificationBell() {
+  const { toggleNotificationPanel, unreadNotificationCount, setUnreadNotificationCount } = useUIStore();
+
+  useEffect(() => {
+    fetch("/api/notifications")
+      .then((r) => r.json())
+      .then(({ unreadCount }) => { if (typeof unreadCount === "number") setUnreadNotificationCount(unreadCount) })
+      .catch(() => {})
+  }, [setUnreadNotificationCount]);
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button variant="ghost" size="icon-sm" className="relative" onClick={toggleNotificationPanel}>
+          <Bell className="size-4" />
+          {unreadNotificationCount > 0 && (
+            <span className="absolute right-1 top-1 flex size-3.5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+              {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+            </span>
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>Notifications</TooltipContent>
+    </Tooltip>
+  );
+}
 
 interface TopbarProps {
   title?: string;
@@ -85,15 +113,7 @@ export function Topbar({ title, breadcrumb, actions }: TopbarProps) {
         </Tooltip>
 
         {/* Notifications */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="relative">
-              <Bell className="size-4" />
-              <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Notifications</TooltipContent>
-        </Tooltip>
+        <NotificationBell />
 
         {/* Theme toggle */}
         <DropdownMenu>

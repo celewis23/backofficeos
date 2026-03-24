@@ -4,8 +4,10 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
-  Building2, User, Bell, Lock, Palette, Globe,
-  CreditCard, Trash2, LogOut, ChevronRight,
+  Building2, User, Bell, Lock, Palette,
+  CreditCard, Trash2, LogOut, ShieldCheck, ShieldOff,
+  Smartphone, Monitor, Globe, MapPin, Clock3, AlertTriangle,
+  CheckCircle2, XCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -221,29 +223,352 @@ function NotificationsSection() {
   )
 }
 
+type Session = { id: string; ipAddress: string | null; userAgent: string | null; createdAt: string; updatedAt: string; isCurrent: boolean }
+type LoginEvent = { id: string; ipAddress: string | null; userAgent: string | null; success: boolean; createdAt: string }
+type TwoFactorState = "loading" | "disabled" | "setup" | "verifying" | "enabled"
+
+function parseDevice(ua: string | null) {
+  if (!ua) return { device: "Unknown device", browser: "Unknown browser" }
+  const device = /mobile|android|iphone/i.test(ua) ? "Mobile" : "Desktop"
+  const browser = ua.includes("Chrome") ? "Chrome" : ua.includes("Firefox") ? "Firefox" : ua.includes("Safari") ? "Safari" : ua.includes("Edge") ? "Edge" : "Browser"
+  return { device, browser }
+}
+
+function timeAgo(date: string) {
+  const diff = Date.now() - new Date(date).getTime()
+  const mins = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
+  if (mins < 1) return "Just now"
+  if (mins < 60) return `${mins}m ago`
+  if (hours < 24) return `${hours}h ago`
+  return `${days}d ago`
+}
+
 function SecuritySection() {
+  const [twoFactorState, setTwoFactorState] = React.useState<TwoFactorState>("loading")
+  const [qrCode, setQrCode] = React.useState<string>("")
+  const [secret, setSecret] = React.useState<string>("")
+  const [verifyCode, setVerifyCode] = React.useState("")
+  const [backupCodes, setBackupCodes] = React.useState<string[]>([])
+  const [sessions, setSessions] = React.useState<Session[]>([])
+  const [loginEvents, setLoginEvents] = React.useState<LoginEvent[]>([])
+  const [loadingSessions, setLoadingSessions] = React.useState(true)
+  const [loadingActivity, setLoadingActivity] = React.useState(true)
+  const [verifying, setVerifying] = React.useState(false)
+  const [currentPw, setCurrentPw] = React.useState("")
+  const [newPw, setNewPw] = React.useState("")
+  const [confirmPw, setConfirmPw] = React.useState("")
+  const [savingPw, setSavingPw] = React.useState(false)
+
+  React.useEffect(() => {
+    // Check current 2FA status
+    fetch("/api/auth/2fa/verify", { method: "GET" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => setTwoFactorState(data?.enabled ? "enabled" : "disabled"))
+      .catch(() => setTwoFactorState("disabled"))
+
+    // Load sessions
+    fetch("/api/auth/sessions")
+      .then((r) => r.json())
+      .then(({ sessions: data }) => setSessions(data ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingSessions(false))
+
+    // Load login activity
+    fetch("/api/auth/login-activity")
+      .then((r) => r.json())
+      .then(({ events }) => setLoginEvents(events ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingActivity(false))
+  }, [])
+
+  async function begin2FASetup() {
+    setTwoFactorState("setup")
+    const res = await fetch("/api/auth/2fa/setup", { method: "POST" })
+    const data = await res.json()
+    setQrCode(data.qrCode)
+    setSecret(data.secret)
+  }
+
+  async function verify2FA() {
+    setVerifying(true)
+    try {
+      const res = await fetch("/api/auth/2fa/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: verifyCode }),
+      })
+      const data = await res.json()
+      if (!res.ok) { toast.error(data.error ?? "Invalid code"); return }
+      setBackupCodes(data.backupCodes)
+      setTwoFactorState("verifying")
+    } catch { toast.error("Something went wrong") }
+    finally { setVerifying(false) }
+  }
+
+  async function disable2FA() {
+    const res = await fetch("/api/auth/2fa/verify", { method: "DELETE" })
+    if (res.ok) { setTwoFactorState("disabled"); toast.success("2FA disabled") }
+  }
+
+  async function revokeSession(sessionId: string) {
+    await fetch("/api/auth/sessions", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+    })
+    setSessions((prev) => prev.filter((s) => s.id !== sessionId))
+    toast.success("Session revoked")
+  }
+
+  async function revokeAllOther() {
+    await fetch("/api/auth/sessions", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ revokeAll: true }),
+    })
+    setSessions((prev) => prev.filter((s) => s.isCurrent))
+    toast.success("All other sessions revoked")
+  }
+
+  async function updatePassword() {
+    if (newPw !== confirmPw) { toast.error("Passwords do not match"); return }
+    if (newPw.length < 8) { toast.error("Password must be at least 8 characters"); return }
+    setSavingPw(true)
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: currentPw, newPassword: newPw }),
+      })
+      if (!res.ok) { const d = await res.json(); toast.error(d.error ?? "Failed"); return }
+      toast.success("Password updated")
+      setCurrentPw(""); setNewPw(""); setConfirmPw("")
+    } catch { toast.error("Something went wrong") }
+    finally { setSavingPw(false) }
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-base font-semibold">Security</h2>
-        <p className="text-sm text-muted-foreground mt-0.5">Manage your password and security settings</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Manage your password and account security</p>
       </div>
-      <Separator />
 
+      {/* Password */}
       <div className="space-y-4">
-        <div className="space-y-1.5">
-          <Label>Current password</Label>
-          <Input type="password" placeholder="••••••••" />
+        <div>
+          <h3 className="text-sm font-semibold">Change password</h3>
         </div>
-        <div className="space-y-1.5">
-          <Label>New password</Label>
-          <Input type="password" placeholder="••••••••" />
+        <Separator />
+        <div className="space-y-3 max-w-sm">
+          <div className="space-y-1.5">
+            <Label>Current password</Label>
+            <Input type="password" placeholder="••••••••" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>New password</Label>
+            <Input type="password" placeholder="••••••••" value={newPw} onChange={(e) => setNewPw(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Confirm new password</Label>
+            <Input type="password" placeholder="••••••••" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} />
+          </div>
+          <Button size="sm" onClick={updatePassword} disabled={savingPw}>
+            {savingPw ? "Updating..." : "Update password"}
+          </Button>
         </div>
-        <div className="space-y-1.5">
-          <Label>Confirm new password</Label>
-          <Input type="password" placeholder="••••••••" />
+      </div>
+
+      {/* Two-Factor Auth */}
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold">Two-factor authentication (2FA)</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Add an extra layer of security to your account</p>
         </div>
-        <Button size="sm">Update password</Button>
+        <Separator />
+
+        {twoFactorState === "loading" && (
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        )}
+
+        {twoFactorState === "disabled" && (
+          <div className="flex items-center justify-between rounded-lg border border-border p-4">
+            <div className="flex items-center gap-3">
+              <ShieldOff className="size-8 text-muted-foreground/50" />
+              <div>
+                <p className="text-sm font-medium">2FA is not enabled</p>
+                <p className="text-xs text-muted-foreground">Use an authenticator app to generate codes</p>
+              </div>
+            </div>
+            <Button size="sm" onClick={begin2FASetup}>Enable 2FA</Button>
+          </div>
+        )}
+
+        {twoFactorState === "setup" && (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-border p-4 space-y-4">
+              <p className="text-sm font-medium">Step 1: Scan this QR code with your authenticator app</p>
+              {qrCode && <img src={qrCode} alt="2FA QR Code" className="size-40 rounded-md" />}
+              <p className="text-xs text-muted-foreground">
+                Or enter this key manually: <code className="bg-muted px-1 rounded text-xs font-mono">{secret}</code>
+              </p>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Step 2: Enter the 6-digit code from your app</p>
+                <div className="flex gap-2 max-w-xs">
+                  <Input
+                    placeholder="000000"
+                    maxLength={6}
+                    value={verifyCode}
+                    onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ""))}
+                    className="font-mono tracking-widest text-center"
+                  />
+                  <Button size="sm" onClick={verify2FA} disabled={verifyCode.length !== 6 || verifying}>
+                    {verifying ? "Verifying..." : "Verify"}
+                  </Button>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setTwoFactorState("disabled")}>Cancel</Button>
+            </div>
+          </div>
+        )}
+
+        {twoFactorState === "verifying" && backupCodes.length > 0 && (
+          <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4 space-y-3">
+            <div className="flex items-center gap-2 text-green-600">
+              <CheckCircle2 className="size-4" />
+              <p className="text-sm font-semibold">2FA enabled successfully!</p>
+            </div>
+            <p className="text-xs text-muted-foreground">Save these backup codes in a secure place. Each code can only be used once.</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {backupCodes.map((code) => (
+                <code key={code} className="rounded bg-muted px-2 py-1 text-xs font-mono text-center">{code}</code>
+              ))}
+            </div>
+            <Button size="sm" onClick={() => setTwoFactorState("enabled")}>Done</Button>
+          </div>
+        )}
+
+        {twoFactorState === "enabled" && (
+          <div className="flex items-center justify-between rounded-lg border border-green-500/30 p-4">
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="size-8 text-green-500" />
+              <div>
+                <p className="text-sm font-medium">2FA is enabled</p>
+                <p className="text-xs text-muted-foreground">Your account is protected with two-factor authentication</p>
+              </div>
+            </div>
+            <Button variant="destructive" size="sm" onClick={disable2FA}>Disable</Button>
+          </div>
+        )}
+      </div>
+
+      {/* Active Sessions */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold">Active sessions</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Devices currently signed into your account</p>
+          </div>
+          {sessions.filter((s) => !s.isCurrent).length > 0 && (
+            <Button variant="outline" size="sm" className="text-xs" onClick={revokeAllOther}>
+              Revoke all other
+            </Button>
+          )}
+        </div>
+        <Separator />
+
+        {loadingSessions ? (
+          <p className="text-sm text-muted-foreground">Loading sessions...</p>
+        ) : (
+          <div className="space-y-2">
+            {sessions.map((s) => {
+              const { device, browser } = parseDevice(s.userAgent)
+              const DeviceIcon = device === "Mobile" ? Smartphone : Monitor
+              return (
+                <div key={s.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                  <DeviceIcon className="size-5 text-muted-foreground shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium">{browser} on {device}</p>
+                      {s.isCurrent && (
+                        <span className="rounded-full bg-green-500/10 px-1.5 py-0.5 text-[10px] font-medium text-green-600">Current</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      {s.ipAddress && (
+                        <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <Globe className="size-3" />{s.ipAddress}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <Clock3 className="size-3" />{timeAgo(s.updatedAt)}
+                      </span>
+                    </div>
+                  </div>
+                  {!s.isCurrent && (
+                    <Button variant="ghost" size="sm" className="text-xs text-destructive hover:text-destructive" onClick={() => revokeSession(s.id)}>
+                      Revoke
+                    </Button>
+                  )}
+                </div>
+              )
+            })}
+            {sessions.length === 0 && <p className="text-sm text-muted-foreground">No sessions found</p>}
+          </div>
+        )}
+      </div>
+
+      {/* Login Activity */}
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold">Login activity</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Recent login attempts for your account</p>
+        </div>
+        <Separator />
+
+        {loadingActivity ? (
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        ) : loginEvents.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No login activity recorded yet</p>
+        ) : (
+          <div className="rounded-lg border border-border overflow-hidden">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="text-left px-3 py-2 text-muted-foreground font-medium">Status</th>
+                  <th className="text-left px-3 py-2 text-muted-foreground font-medium">Device</th>
+                  <th className="text-left px-3 py-2 text-muted-foreground font-medium">IP Address</th>
+                  <th className="text-left px-3 py-2 text-muted-foreground font-medium">Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loginEvents.map((event) => {
+                  const { device, browser } = parseDevice(event.userAgent)
+                  return (
+                    <tr key={event.id} className="border-b border-border last:border-0">
+                      <td className="px-3 py-2">
+                        {event.success ? (
+                          <span className="flex items-center gap-1 text-green-600">
+                            <CheckCircle2 className="size-3" /> Success
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-red-500">
+                            <XCircle className="size-3" /> Failed
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 text-muted-foreground">{browser} / {device}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{event.ipAddress ?? "—"}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{timeAgo(event.createdAt)}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )

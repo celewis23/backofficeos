@@ -34,6 +34,10 @@ model User {
   comments        Comment[]
   sentMessages    Message[]
   projectMembers  ProjectMember[]
+  notifications   Notification[]
+  loginEvents     LoginEvent[]
+  twoFactor       UserTwoFactor?
+  createdExpenses Expense[]
 
   @@map("users")
 }
@@ -137,6 +141,9 @@ model Organization {
   integrations   Integration[]
   auditLogs      AuditLog[]
   tags           Tag[]
+  expenses       Expense[]
+  vendors        Vendor[]
+  notifications  Notification[]
 
   @@map("organizations")
 }
@@ -246,16 +253,17 @@ model Client {
   updatedAt      DateTime     @updatedAt
 
   organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  contacts     Contact[]
-  invoices     Invoice[]
-  estimates    Estimate[]
-  projects     Project[]
-  events       Event[]
-  threads      Thread[]
-  files        File[]
-  contracts    Contract[]
-  activities   ClientActivity[]
-  tags         ClientTag[]
+  contacts      Contact[]
+  invoices      Invoice[]
+  estimates     Estimate[]
+  projects      Project[]
+  events        Event[]
+  threads       Thread[]
+  files         File[]
+  contracts     Contract[]
+  activities    ClientActivity[]
+  tags          ClientTag[]
+  portalTokens  ClientPortalToken[]
 
   @@index([organizationId])
   @@map("clients")
@@ -594,6 +602,7 @@ model Project {
   tasks        Task[]
   timeEntries  TimeEntry[]
   files        File[]
+  expenses     Expense[]
 
   @@index([organizationId])
   @@map("projects")
@@ -1121,4 +1130,160 @@ model AIMessage {
   conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@map("ai_messages")
+}
+
+// ============================================================
+// EXPENSES & VENDORS
+// ============================================================
+
+model Vendor {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  email          String?
+  phone          String?
+  website        String?
+  paymentTerms   Int?     @default(30)
+  notes          String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  expenses     Expense[]
+
+  @@index([organizationId])
+  @@map("vendors")
+}
+
+model Expense {
+  id             String          @id @default(cuid())
+  organizationId String
+  vendorId       String?
+  vendorName     String
+  category       ExpenseCategory
+  amount         Decimal         @db.Decimal(12, 2)
+  currency       String          @default("USD")
+  date           DateTime
+  paymentMethod  PaymentMethod   @default(OTHER)
+  status         ExpenseStatus   @default(PENDING)
+  receiptUrl     String?
+  notes          String?         @db.Text
+  projectId      String?
+  createdBy      String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vendor       Vendor?      @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  creator      User         @relation(fields: [createdBy], references: [id])
+
+  @@index([organizationId])
+  @@index([organizationId, date])
+  @@map("expenses")
+}
+
+enum ExpenseCategory {
+  SOFTWARE
+  CONTRACTOR
+  EQUIPMENT
+  RENT
+  UTILITIES
+  TRAVEL
+  MARKETING
+  MEALS
+  OTHER
+}
+
+enum ExpenseStatus {
+  PENDING
+  PAID
+  VOIDED
+}
+
+// ============================================================
+// CLIENT PORTAL
+// ============================================================
+
+model ClientPortalToken {
+  id        String   @id @default(cuid())
+  clientId  String
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@map("client_portal_tokens")
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+model Notification {
+  id             String           @id @default(cuid())
+  organizationId String
+  userId         String
+  type           NotificationType
+  title          String
+  body           String?
+  entityType     String?
+  entityId       String?
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, userId])
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  INVOICE_OVERDUE
+  INVOICE_PAID
+  INVOICE_VIEWED
+  CONTRACT_SIGNED
+  CONTRACT_DECLINED
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  TASK_ASSIGNED
+  TASK_DUE_SOON
+  LEAD_ASSIGNED
+  MENTION
+  TEAM_INVITE_ACCEPTED
+}
+
+// ============================================================
+// SECURITY & 2FA
+// ============================================================
+
+model UserTwoFactor {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  method          String
+  secretEncrypted String?  @db.Text
+  backupCodesJson String?  @db.Text
+  enabledAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_two_factor")
+}
+
+model LoginEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  ip        String?
+  device    String?
+  success   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("login_events")
 }

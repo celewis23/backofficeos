@@ -19,6 +19,13 @@ interface UIStore {
   setAIPanelOpen: (open: boolean) => void;
   toggleAiPanel: () => void;
 
+  // Notification panel
+  notificationPanelOpen: boolean;
+  setNotificationPanelOpen: (open: boolean) => void;
+  toggleNotificationPanel: () => void;
+  unreadNotificationCount: number;
+  setUnreadNotificationCount: (count: number) => void;
+
   // Current context (for AI assistant awareness)
   pageContext: {
     module: string | null;
@@ -43,6 +50,12 @@ export const useUIStore = create<UIStore>()(
       setAiPanelOpen: (open) => set({ aiPanelOpen: open }),
       setAIPanelOpen: (open) => set({ aiPanelOpen: open }),
       toggleAiPanel: () => set((s) => ({ aiPanelOpen: !s.aiPanelOpen })),
+
+      notificationPanelOpen: false,
+      setNotificationPanelOpen: (open) => set({ notificationPanelOpen: open }),
+      toggleNotificationPanel: () => set((s) => ({ notificationPanelOpen: !s.notificationPanelOpen })),
+      unreadNotificationCount: 0,
+      setUnreadNotificationCount: (count) => set({ unreadNotificationCount: count }),
 
       pageContext: {
         module: null,
