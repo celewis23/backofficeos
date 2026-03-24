@@ -33,14 +33,14 @@ const ACTIONS = [
   { value: "webhook",           label: "Webhook POST to external URL" },
 ]
 
-type AutomationRun = { status: string; ranAt: string }
+type AutomationRun = { status: string; ranAt: Date | string }
 type Automation = {
   id: string
   name: string
   description: string | null
   triggerType: string
   isActive: boolean
-  lastRunAt: string | null
+  lastRunAt: Date | string | null
   runCount: number
   runs: AutomationRun[]
   _count: { runs: number }

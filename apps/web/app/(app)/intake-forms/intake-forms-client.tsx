@@ -31,7 +31,7 @@ type IntakeForm = {
   slug: string
   description: string | null
   isActive: boolean
-  createdAt: string
+  createdAt: Date | string
   _count: { submissions: number }
 }
 

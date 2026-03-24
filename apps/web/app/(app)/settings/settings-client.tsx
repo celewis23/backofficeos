@@ -44,9 +44,9 @@ const NAV_ITEMS = [
 ]
 
 type CustomField = { id: string; entityType: string; label: string; key: string; fieldType: string; required: boolean; sortOrder: number }
-type TaxRate = { id: string; name: string; rate: string | number; country: string | null; region: string | null; isDefault: boolean; isActive: boolean }
-type AuditLog = { id: string; action: string; entityType: string; entityId: string; ipAddress: string | null; createdAt: string; user: { name: string; email: string } | null }
-type GdprRequest = { id: string; type: string; status: string; notes: string | null; createdAt: string; resolvedAt: string | null }
+type TaxRate = { id: string; name: string; rate: { toString(): string } | string | number; country: string | null; region: string | null; isDefault: boolean; isActive: boolean }
+type AuditLog = { id: string; action: string; entityType: string; entityId: string; ipAddress: string | null; createdAt: Date | string; user: { name: string; email: string } | null }
+type GdprRequest = { id: string; type: string; status: string; notes: string | null; createdAt: Date | string; resolvedAt: Date | string | null }
 
 export function SettingsClient({
   user, organization, customFields = [], taxRates = [], auditLogs = [], gdprRequests = [],
