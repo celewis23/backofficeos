@@ -9,7 +9,7 @@ export const metadata = { title: "Settings — ArcheionOS" }
 export default async function SettingsPage() {
   const { session, orgId } = await requireOrg()
 
-  const [orgData, customFields, taxRates, auditLogs, gdprRequests] = await Promise.all([
+  const [orgData, customFields, taxRates, auditLogs, gdprRequests, storageAgg] = await Promise.all([
     auth.api.getFullOrganization({ headers: await headers() }),
     db.customField.findMany({ where: { organizationId: orgId }, orderBy: [{ entityType: "asc" }, { sortOrder: "asc" }] }),
     db.taxRate.findMany({ where: { organizationId: orgId }, orderBy: { createdAt: "desc" } }),
@@ -20,6 +20,10 @@ export default async function SettingsPage() {
       include: { user: { select: { name: true, email: true } } },
     }),
     db.gdprRequest.findMany({ where: { organizationId: orgId }, orderBy: { createdAt: "desc" } }),
+    db.asset.aggregate({
+      where: { organizationId: orgId },
+      _sum: { sizeBytes: true },
+    }),
   ])
 
   return (
@@ -30,6 +34,7 @@ export default async function SettingsPage() {
       taxRates={taxRates}
       auditLogs={auditLogs}
       gdprRequests={gdprRequests}
+      storageUsedBytes={storageAgg._sum.sizeBytes ?? 0}
     />
   )
 }

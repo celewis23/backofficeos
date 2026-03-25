@@ -158,6 +158,8 @@ model Organization {
   inventoryItems       InventoryItem[]
   inventoryMovements   InventoryMovement[]
   payrollRuns          PayrollRun[]
+  assetFolders   AssetFolder[]
+  assets         Asset[]
 
   @@map("organizations")
 }
@@ -1746,4 +1748,62 @@ model PayrollEmployeeSummary {
   @@index([payrollRunId])
   @@index([organizationId])
   @@map("payroll_employee_summaries")
+}
+
+// ============================================================
+// ASSET LIBRARY
+// ============================================================
+
+model AssetFolder {
+  id             String   @id @default(cuid())
+  organizationId String
+  parentId       String?
+  name           String
+  isSystemFolder Boolean  @default(false)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parent       AssetFolder?  @relation("FolderChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children     AssetFolder[] @relation("FolderChildren")
+  assets       Asset[]
+
+  @@index([organizationId])
+  @@map("asset_folders")
+}
+
+model Asset {
+  id                String    @id @default(cuid())
+  organizationId    String
+  folderId          String?
+  name              String
+  originalName      String
+  fileUrl           String
+  storageKey        String
+  fileType          String    // image | video | document | font | archive | other
+  mimeType          String
+  sizeBytes         Int
+  tags              Json?
+  linkedEntityType  String?
+  linkedEntityId    String?
+  uploadedBy        String
+  isPublic          Boolean   @default(false)
+  publicToken       String?   @unique @default(cuid())
+  publicExpiresAt   DateTime?
+  publicPassword    String?
+  sourceProvider    String?   // google_drive | onedrive | null
+  sourceFileId      String?
+  width             Int?
+  height            Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  folder       AssetFolder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([organizationId, folderId])
+  @@index([publicToken])
+  @@map("assets")
 }

@@ -9,7 +9,7 @@ import {
   CreditCard, Trash2, LogOut, ShieldCheck, ShieldOff,
   Smartphone, Monitor, Globe, Clock3,
   CheckCircle2, XCircle, SlidersHorizontal, ScrollText,
-  Download, Percent, FileX, Plus, Search,
+  Download, Percent, FileX, Plus, Search, HardDrive,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,6 +23,7 @@ import { signOut } from "@/lib/auth-client"
 import { initials } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Progress } from "@/components/ui/progress"
 import { format } from "date-fns"
 import {
   createCustomField, deleteCustomField,
@@ -42,6 +43,7 @@ const NAV_ITEMS = [
   { id: "audit-log",      label: "Audit Log",        icon: ScrollText },
   { id: "data-export",    label: "Data Export",      icon: Download },
   { id: "gdpr",           label: "GDPR & Compliance", icon: FileX },
+  { id: "storage",        label: "Storage",           icon: HardDrive },
 ]
 
 type CustomField = { id: string; entityType: string; label: string; key: string; fieldType: string; required: boolean; sortOrder: number }
@@ -50,13 +52,14 @@ type AuditLog = { id: string; action: string; entityType: string; entityId: stri
 type GdprRequest = { id: string; type: string; status: string; notes: string | null; createdAt: Date | string; resolvedAt: Date | string | null }
 
 export function SettingsClient({
-  user, organization, customFields = [], taxRates = [], auditLogs = [], gdprRequests = [],
+  user, organization, customFields = [], taxRates = [], auditLogs = [], gdprRequests = [], storageUsedBytes = 0,
 }: {
   user: any; organization: any
   customFields: CustomField[]
   taxRates: TaxRate[]
   auditLogs: AuditLog[]
   gdprRequests: GdprRequest[]
+  storageUsedBytes?: number
 }) {
   const router = useRouter()
   const [activeSection, setActiveSection] = React.useState("profile")
@@ -119,6 +122,7 @@ export function SettingsClient({
         {activeSection === "audit-log" && <AuditLogSection logs={auditLogs} />}
         {activeSection === "data-export" && <DataExportSection />}
         {activeSection === "gdpr" && <GdprSection requests={gdprRequests} />}
+        {activeSection === "storage" && <StorageSection storageUsedBytes={storageUsedBytes} />}
       </main>
     </div>
   )
@@ -1239,6 +1243,55 @@ function GdprSection({ requests: initial }: { requests: GdprRequest[] }) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function StorageSection({ storageUsedBytes }: { storageUsedBytes: number }) {
+  const PLAN_LIMITS: Record<string, { bytes: number; label: string }> = {
+    FREE:         { bytes: 1  * 1024 ** 3, label: "1 GB" },
+    STARTER:      { bytes: 10 * 1024 ** 3, label: "10 GB" },
+    PROFESSIONAL: { bytes: 50 * 1024 ** 3, label: "50 GB" },
+    ENTERPRISE:   { bytes: 500 * 1024 ** 3, label: "500 GB" },
+  }
+  const limit = PLAN_LIMITS.FREE
+  const usedPercent = Math.min(100, (storageUsedBytes / limit.bytes) * 100)
+
+  function fmtBytes(b: number) {
+    if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`
+    if (b < 1024 ** 3) return `${(b / 1024 ** 2).toFixed(1)} MB`
+    return `${(b / 1024 ** 3).toFixed(2)} GB`
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-base font-semibold">Storage</h2>
+        <p className="text-sm text-muted-foreground">Asset library storage usage for your organization.</p>
+      </div>
+      <div className="rounded-xl border p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">Asset Library Storage</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {fmtBytes(storageUsedBytes)} used of {limit.label}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-bold">{usedPercent.toFixed(1)}%</p>
+            <p className="text-xs text-muted-foreground">used</p>
+          </div>
+        </div>
+        <Progress value={usedPercent} className={usedPercent > 80 ? "[&>div]:bg-destructive" : ""} />
+        <div className="grid grid-cols-3 gap-4 text-center text-sm">
+          {Object.entries(PLAN_LIMITS).map(([plan, { bytes: _bytes, label }]) => (
+            <div key={plan} className={`rounded-lg border p-3 ${plan === "FREE" ? "border-primary bg-primary/5" : ""}`}>
+              <p className="font-semibold">{plan}</p>
+              <p className="text-muted-foreground text-xs">{label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
