@@ -37,7 +37,9 @@ model User {
   notifications   Notification[]
   loginEvents     LoginEvent[]
   twoFactor       UserTwoFactor?
-  createdExpenses Expense[]
+  createdExpenses    Expense[]
+  createdAutomations Automation[]
+  automationApprovals AutomationApproval[]
 
   @@map("users")
 }
@@ -158,8 +160,10 @@ model Organization {
   inventoryItems       InventoryItem[]
   inventoryMovements   InventoryMovement[]
   payrollRuns          PayrollRun[]
-  assetFolders   AssetFolder[]
-  assets         Asset[]
+  assetFolders        AssetFolder[]
+  assets              Asset[]
+  automationRunsOrg   AutomationRun[]
+  automationApprovals AutomationApproval[]
 
   @@map("organizations")
 }
@@ -1319,39 +1323,110 @@ model Automation {
   description    String?
   triggerType    String
   triggerConfig  Json?
-  actions        Json
+  actions        Json     // legacy simple-builder actions list
+  nodes          Json?    // visual builder node graph
   isActive       Boolean  @default(true)
   lastRunAt      DateTime?
   runCount       Int      @default(0)
+  createdBy      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  runs         AutomationRun[]
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creator        User?             @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  runs           AutomationRun[]
 
   @@index([organizationId])
   @@map("automations")
 }
 
 model AutomationRun {
-  id           String             @id @default(cuid())
-  automationId String
-  status       AutomationRunStatus @default(SUCCESS)
-  entityType   String?
-  entityId     String?
-  log          String?            @db.Text
-  ranAt        DateTime           @default(now())
+  id             String              @id @default(cuid())
+  automationId   String
+  organizationId String?
+  clientId       String?
+  status         AutomationRunStatus @default(SUCCESS)
+  entityType     String?
+  entityId       String?
+  branchPath     Json?
+  error          String?             @db.Text
+  log            String?             @db.Text
+  dryRun         Boolean             @default(false)
+  ranAt          DateTime            @default(now())
+  completedAt    DateTime?
 
-  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  automation   Automation          @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  organization Organization?       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  steps        AutomationRunStep[]
+  approvals    AutomationApproval[]
 
   @@index([automationId])
+  @@index([organizationId])
   @@map("automation_runs")
+}
+
+model AutomationRunStep {
+  id         String                @id @default(cuid())
+  runId      String
+  nodeId     String
+  nodeType   String
+  status     AutomationStepStatus  @default(PENDING)
+  inputData  Json?
+  outputData Json?
+  error      String?               @db.Text
+  executeAt  DateTime?             // for pending delay steps
+  executedAt DateTime?
+  createdAt  DateTime              @default(now())
+
+  run AutomationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([status, executeAt])
+  @@map("automation_run_steps")
+}
+
+model AutomationApproval {
+  id             String                    @id @default(cuid())
+  organizationId String
+  runId          String
+  nodeId         String
+  requestedAt    DateTime                  @default(now())
+  approvedBy     String?
+  approvedAt     DateTime?
+  status         AutomationApprovalStatus  @default(PENDING)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  run          AutomationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  approver     User?         @relation(fields: [approvedBy], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status])
+  @@index([runId])
+  @@map("automation_approvals")
 }
 
 enum AutomationRunStatus {
   SUCCESS
   FAILURE
   SKIPPED
+  RUNNING
+  COMPLETED
+  FAILED
+  DRY_RUN
+}
+
+enum AutomationStepStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+  AWAITING_APPROVAL
+}
+
+enum AutomationApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 // ============================================================
