@@ -26,6 +26,7 @@ import {
   Receipt,
   Workflow,
   ClipboardList,
+  Package,
 } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
 import { useUIStore } from "@/lib/stores/ui-store";
@@ -56,6 +57,7 @@ const NAV_ITEMS = [
   { href: "/scheduling",  icon: Clock,            label: "Scheduling" },
   { href: "/documents",   icon: FileText,         label: "Documents" },
   { href: "/expenses",    icon: Receipt,          label: "Expenses" },
+  { href: "/inventory",   icon: Package,          label: "Inventory" },
   { href: "/hr",          icon: Briefcase,        label: "HR & Team" },
   { href: "/analytics",   icon: BarChart3,        label: "Analytics" },
   { href: "/team",        icon: UsersRound,       label: "Team" },

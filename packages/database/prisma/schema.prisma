@@ -151,7 +151,13 @@ model Organization {
   taxRates       TaxRate[]
   dataExports    DataExportJob[]
   gdprRequests   GdprRequest[]
-  consentLogs    ConsentLog[]
+  consentLogs          ConsentLog[]
+  platformConnections  PlatformConnection[]
+  posTransactions      PosTransaction[]
+  posSyncLogs          PosSyncLog[]
+  inventoryItems       InventoryItem[]
+  inventoryMovements   InventoryMovement[]
+  payrollRuns          PayrollRun[]
 
   @@map("organizations")
 }
@@ -722,6 +728,7 @@ model TimeEntry {
   hourlyRate     Decimal? @db.Decimal(8, 2)
   invoiced       Boolean  @default(false)
   invoiceItemId  String?
+  payrollSynced  Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -1200,11 +1207,13 @@ enum ExpenseCategory {
   TRAVEL
   MARKETING
   MEALS
+  PAYROLL
   OTHER
 }
 
 enum ExpenseStatus {
   PENDING
+  APPROVED
   PAID
   VOIDED
 }
@@ -1437,7 +1446,8 @@ model Product {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inventoryItems  InventoryItem[]
 
   @@index([organizationId])
   @@map("products")
@@ -1548,4 +1558,192 @@ model ConsentLog {
 
   @@index([organizationId])
   @@map("consent_logs")
+}
+
+// ============================================================
+// PLATFORM CONNECTIONS (POS + Payroll OAuth/API keys)
+// ============================================================
+
+model PlatformConnection {
+  id             String   @id @default(cuid())
+  organizationId String
+  platform       String   // square | clover | shopify_pos | toast | lightspeed | gusto | adp | rippling | paychex | quickbooks_payroll | deel
+  category       String   // pos | payroll
+  accessToken    String?  @db.Text
+  refreshToken   String?  @db.Text
+  tokenExpiresAt DateTime?
+  apiKey         String?  @db.Text
+  webhookSecret  String?
+  externalId     String?  // merchant/account ID on the platform
+  metadata       Json?
+  isActive       Boolean  @default(true)
+  lastSyncAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, platform])
+  @@index([organizationId])
+  @@map("platform_connections")
+}
+
+// ============================================================
+// POS INTEGRATIONS
+// ============================================================
+
+model PosTransaction {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  platform              String   // square | clover | shopify_pos | toast | lightspeed
+  platformTransactionId String
+  amount                Decimal  @db.Decimal(12, 2)
+  tax                   Decimal  @default(0) @db.Decimal(12, 2)
+  tip                   Decimal  @default(0) @db.Decimal(12, 2)
+  refunded              Boolean  @default(false)
+  items                 Json?
+  customerEmail         String?
+  currency              String   @default("USD")
+  occurredAt            DateTime
+  syncedAt              DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, platform, platformTransactionId])
+  @@index([organizationId, occurredAt])
+  @@map("pos_transactions")
+}
+
+model PosSyncLog {
+  id            String        @id @default(cuid())
+  organizationId String
+  platform      String
+  status        PosSyncStatus @default(SUCCESS)
+  recordsPulled Int           @default(0)
+  error         String?       @db.Text
+  syncedAt      DateTime      @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, syncedAt])
+  @@map("pos_sync_logs")
+}
+
+enum PosSyncStatus {
+  SUCCESS
+  FAILED
+  PARTIAL
+}
+
+// ============================================================
+// INVENTORY
+// ============================================================
+
+model InventoryItem {
+  id                String   @id @default(cuid())
+  organizationId    String
+  productId         String?  // optional link to catalog Product
+  name              String
+  sku               String?
+  barcode           String?
+  category          String?
+  costPrice         Decimal? @db.Decimal(12, 2)
+  sellPrice         Decimal? @db.Decimal(12, 2)
+  stockQuantity     Int      @default(0)
+  lowStockThreshold Int      @default(5)
+  unit              String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      Product?           @relation(fields: [productId], references: [id], onDelete: SetNull)
+  movements    InventoryMovement[]
+
+  @@index([organizationId])
+  @@map("inventory_items")
+}
+
+model InventoryMovement {
+  id             String            @id @default(cuid())
+  organizationId String
+  itemId         String
+  type           InventoryMoveType
+  quantityChange Int
+  notes          String?
+  referenceId    String?
+  referenceType  String?
+  createdAt      DateTime          @default(now())
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  item         InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([itemId])
+  @@map("inventory_movements")
+}
+
+enum InventoryMoveType {
+  SALE
+  RESTOCK
+  ADJUSTMENT
+  RETURN
+  TRANSFER
+}
+
+// ============================================================
+// PAYROLL
+// ============================================================
+
+model PayrollRun {
+  id             String          @id @default(cuid())
+  organizationId String
+  platform       String          // gusto | adp | rippling | paychex | quickbooks_payroll | deel
+  platformRunId  String?
+  payPeriodStart DateTime
+  payPeriodEnd   DateTime
+  runDate        DateTime
+  totalGross     Decimal         @db.Decimal(14, 2)
+  totalNet       Decimal         @db.Decimal(14, 2)
+  totalTaxes     Decimal         @default(0) @db.Decimal(14, 2)
+  totalDeductions Decimal        @default(0) @db.Decimal(14, 2)
+  employeeCount  Int             @default(0)
+  status         PayrollRunStatus @default(PENDING)
+  rawData        Json?
+  syncedAt       DateTime        @default(now())
+  expenseId      String?         @unique
+
+  organization Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  summaries    PayrollEmployeeSummary[]
+
+  @@index([organizationId, runDate])
+  @@map("payroll_runs")
+}
+
+enum PayrollRunStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
+model PayrollEmployeeSummary {
+  id           String   @id @default(cuid())
+  payrollRunId String
+  organizationId String
+  userId       String?  // nullable — may not have a local user
+  employeeName String
+  grossPay     Decimal  @db.Decimal(12, 2)
+  netPay       Decimal  @db.Decimal(12, 2)
+  taxes        Decimal  @default(0) @db.Decimal(12, 2)
+  deductions   Decimal  @default(0) @db.Decimal(12, 2)
+  hoursPaid    Decimal? @db.Decimal(8, 2)
+  isContractor Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+
+  @@index([payrollRunId])
+  @@index([organizationId])
+  @@map("payroll_employee_summaries")
 }

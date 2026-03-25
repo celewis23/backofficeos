@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "HR & Team" }
 export default async function HRPage() {
   const { orgId } = await requireOrg()
 
-  const [members, timeEntries, totalHours] = await Promise.all([
+  const [members, timeEntries, totalHours, payrollRuns, payrollConnections] = await Promise.all([
     db.member.findMany({
       where: { organizationId: orgId },
       include: {
@@ -48,6 +48,17 @@ export default async function HRPage() {
       },
       _sum: { duration: true },
     }),
+
+    db.payrollRun.findMany({
+      where: { organizationId: orgId },
+      include: { summaries: true },
+      orderBy: { runDate: "desc" },
+      take: 12,
+    }),
+
+    db.platformConnection.findMany({
+      where: { organizationId: orgId, category: "payroll" },
+    }),
   ])
 
   const totalMinutes = totalHours._sum.duration ?? 0
@@ -60,6 +71,8 @@ export default async function HRPage() {
     <HRClient
       members={members}
       timeEntries={timeEntries}
+      payrollRuns={payrollRuns}
+      payrollConnections={payrollConnections}
       stats={{
         totalMembers: members.length,
         totalHours: Math.round(totalMinutes / 60),

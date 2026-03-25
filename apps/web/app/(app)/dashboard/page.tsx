@@ -3,7 +3,7 @@ import Link from "next/link"
 import {
   TrendingUp, TrendingDown, DollarSign, Users2,
   Folders, Clock, ArrowUpRight, CheckCircle2, AlertCircle,
-  Calendar, FileText,
+  Calendar, FileText, ShoppingCart,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -23,6 +23,9 @@ export default async function DashboardPage() {
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const yesterdayStart = new Date(todayStart.getTime() - 86400000)
+
   const [
     revenueThisMonth,
     revenueLastMonth,
@@ -33,6 +36,8 @@ export default async function DashboardPage() {
     recentInvoices,
     upcomingEvents,
     recentProjects,
+    posSalesToday,
+    posSalesYesterday,
   ] = await Promise.all([
     db.invoice.aggregate({
       where: { organizationId: orgId, status: "PAID", paidAt: { gte: thisMonthStart } },
@@ -90,6 +95,15 @@ export default async function DashboardPage() {
       orderBy: { updatedAt: "desc" },
       take: 4,
     }),
+    db.posTransaction.aggregate({
+      where: { organizationId: orgId, occurredAt: { gte: todayStart }, refunded: false },
+      _sum: { amount: true },
+      _count: { id: true },
+    }),
+    db.posTransaction.aggregate({
+      where: { organizationId: orgId, occurredAt: { gte: yesterdayStart, lt: todayStart }, refunded: false },
+      _sum: { amount: true },
+    }),
   ])
 
   const revenueThis = Number(revenueThisMonth._sum.total ?? 0)
@@ -99,6 +113,11 @@ export default async function DashboardPage() {
   const revenueChange = revenueLast > 0
     ? ((revenueThis - revenueLast) / revenueLast) * 100
     : 0
+
+  const posToday = Number(posSalesToday._sum.amount ?? 0)
+  const posYesterday = Number(posSalesYesterday._sum.amount ?? 0)
+  const posChange = posYesterday > 0 ? ((posToday - posYesterday) / posYesterday) * 100 : 0
+  const hasPosData = posSalesToday._count.id > 0 || posYesterday > 0
 
   const hour = now.getHours()
   const greeting =
@@ -184,6 +203,46 @@ export default async function DashboardPage() {
             </Card>
           ))}
         </div>
+
+        {/* POS Sales card (only when data exists) */}
+        {hasPosData && (
+          <Card>
+            <CardContent className="pt-5 pb-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <ShoppingCart className="size-4 text-muted-foreground" />
+                  <p className="text-sm font-medium">POS Sales</p>
+                </div>
+                <Link href="/integrations" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  View integrations →
+                </Link>
+              </div>
+              <div className="grid grid-cols-3 divide-x divide-border">
+                <div className="pr-6">
+                  <p className="text-xs font-medium text-muted-foreground">Today</p>
+                  <p className="text-xl font-bold mt-1">{formatCurrency(posToday)}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    {posChange >= 0
+                      ? <TrendingUp className="size-3 text-green-500" />
+                      : <TrendingDown className="size-3 text-destructive" />
+                    }
+                    <span className={`text-xs ${posChange >= 0 ? "text-green-500" : "text-destructive"}`}>
+                      {posChange >= 0 ? "+" : ""}{posChange.toFixed(1)}% vs yesterday
+                    </span>
+                  </div>
+                </div>
+                <div className="px-6">
+                  <p className="text-xs font-medium text-muted-foreground">Yesterday</p>
+                  <p className="text-xl font-bold mt-1">{formatCurrency(posYesterday)}</p>
+                </div>
+                <div className="px-6">
+                  <p className="text-xs font-medium text-muted-foreground">Transactions today</p>
+                  <p className="text-xl font-bold mt-1">{posSalesToday._count.id}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* P&L summary */}
         <Card>
