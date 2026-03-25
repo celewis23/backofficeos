@@ -1,8 +1,10 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Plus, Zap, Play, Trash2, ToggleLeft, ToggleRight, ChevronRight, Clock, CheckCircle2, XCircle } from "lucide-react"
+import { Plus, Zap, Trash2, Clock, CheckCircle2, XCircle, Edit2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -49,6 +51,7 @@ type Automation = {
 type ActionItem = { type: string; config: Record<string, string> }
 
 export function AutomationsClient({ automations: initial }: { automations: Automation[] }) {
+  const router = useRouter()
   const [automations, setAutomations] = React.useState(initial)
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [saving, setSaving] = React.useState(false)
@@ -95,7 +98,7 @@ export function AutomationsClient({ automations: initial }: { automations: Autom
           <h1 className="text-sm font-semibold">Automations</h1>
           <p className="text-xs text-muted-foreground mt-0.5">Automate repetitive tasks with trigger-based rules</p>
         </div>
-        <Button size="sm" className="gap-1.5" onClick={() => setDialogOpen(true)}>
+        <Button size="sm" className="gap-1.5" onClick={() => router.push("/automations/new/builder")}>
           <Plus className="size-3.5" /> New Automation
         </Button>
       </div>
@@ -159,6 +162,11 @@ export function AutomationsClient({ automations: initial }: { automations: Autom
                         onCheckedChange={() => handleToggle(a.id, a.isActive)}
                         className="scale-90"
                       />
+                      <Button variant="ghost" size="icon-sm" asChild>
+                        <Link href={`/automations/${a.id}/builder`}>
+                          <Edit2 className="size-3.5" />
+                        </Link>
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon-sm"
