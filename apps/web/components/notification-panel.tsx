@@ -115,7 +115,7 @@ export function NotificationPanel() {
       />
 
       {/* Panel */}
-      <div className="fixed right-0 top-0 z-50 h-full w-96 border-l border-border bg-background shadow-2xl flex flex-col">
+      <div className="fixed right-0 top-0 z-50 h-full w-full sm:w-96 border-l border-border bg-background shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
           <div className="flex items-center gap-2">

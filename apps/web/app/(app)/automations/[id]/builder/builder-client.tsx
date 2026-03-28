@@ -34,6 +34,7 @@ import {
   emptyGraph,
 } from "@/lib/automation-types"
 import { saveBuilderAutomation } from "./actions"
+import { TestPanel } from "./test-panel"
 
 // ─── SERIALIZED TYPES ─────────────────────────────────────────────────────────
 
@@ -979,6 +980,7 @@ export function BuilderClient({ automation }: { automation: BuilderAutomation })
   const [lastSaved, setLastSaved] = React.useState<Date | null>(null)
   const [activePaletteItem, setActivePaletteItem] = React.useState<{ type: AutomationNodeType; actionType?: string } | null>(null)
   const [dragOverTarget, setDragOverTarget] = React.useState<string | null>(null)
+  const [testPanelOpen, setTestPanelOpen] = React.useState(false)
   const autoSaveRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Escape dismisses palette selection
@@ -1136,7 +1138,7 @@ export function BuilderClient({ automation }: { automation: BuilderAutomation })
           <Switch checked={isEnabled} onCheckedChange={(v) => { setIsEnabled(v); setIsDirty(true) }} className="scale-90" />
         </div>
 
-        <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+        <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => setTestPanelOpen(true)}>
           <Play className="size-3" /> Test run
         </Button>
 
@@ -1181,6 +1183,12 @@ export function BuilderClient({ automation }: { automation: BuilderAutomation })
           />
         )}
       </div>
+
+      <TestPanel
+        open={testPanelOpen}
+        onClose={() => setTestPanelOpen(false)}
+        automationId={automation.id}
+      />
     </div>
   )
 }

@@ -138,7 +138,7 @@ function NavItem({
 export function Sidebar({ orgName }: { orgName: string }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { sidebarCollapsed, toggleSidebar, setAiPanelOpen } = useUIStore();
+  const { sidebarCollapsed, toggleSidebar, setAiPanelOpen, toggleNotificationPanel } = useUIStore();
   const { data: session } = useSession();
   const user = session?.user;
 
@@ -257,7 +257,7 @@ export function Sidebar({ orgName }: { orgName: string }) {
               <DropdownMenuItem asChild>
                 <Link href="/settings"><Settings className="size-4" /> Settings</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleNotificationPanel}>
                 <Bell className="size-4" /> Notifications
               </DropdownMenuItem>
               <DropdownMenuSeparator />
