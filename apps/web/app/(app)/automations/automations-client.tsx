@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Plus, Zap, Trash2, Clock, CheckCircle2, XCircle, Edit2 } from "lucide-react"
+import { Plus, Zap, Trash2, Clock, CheckCircle2, XCircle, Edit2, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -98,9 +98,16 @@ export function AutomationsClient({ automations: initial }: { automations: Autom
           <h1 className="text-sm font-semibold">Automations</h1>
           <p className="text-xs text-muted-foreground mt-0.5">Automate repetitive tasks with trigger-based rules</p>
         </div>
-        <Button size="sm" className="gap-1.5" onClick={() => router.push("/automations/new/builder")}>
-          <Plus className="size-3.5" /> New Automation
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" className="gap-1.5" asChild>
+            <Link href="/automations/templates">
+              <Sparkles className="size-3.5" /> Templates
+            </Link>
+          </Button>
+          <Button size="sm" className="gap-1.5" onClick={() => router.push("/automations/new/builder")}>
+            <Plus className="size-3.5" /> New Automation
+          </Button>
+        </div>
       </div>
 
       <ScrollArea className="flex-1">
@@ -109,9 +116,16 @@ export function AutomationsClient({ automations: initial }: { automations: Autom
             <Zap className="size-10 text-muted-foreground/30 mb-3" />
             <p className="text-sm font-medium">No automations yet</p>
             <p className="text-xs text-muted-foreground mt-1">Create rules to automate your workflow</p>
-            <Button size="sm" className="mt-4 gap-1.5" onClick={() => setDialogOpen(true)}>
-              <Plus className="size-3.5" /> New Automation
-            </Button>
+            <div className="flex items-center gap-2 mt-4">
+              <Button size="sm" variant="outline" className="gap-1.5" asChild>
+                <Link href="/automations/templates">
+                  <Sparkles className="size-3.5" /> Browse Templates
+                </Link>
+              </Button>
+              <Button size="sm" className="gap-1.5" onClick={() => router.push("/automations/new/builder")}>
+                <Plus className="size-3.5" /> New Automation
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="p-6 space-y-3">
