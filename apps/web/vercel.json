@@ -3,5 +3,11 @@
   "buildCommand": "pnpm build",
   "devCommand": "pnpm dev --turbopack",
   "installCommand": "pnpm install",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "crons": [
+    {
+      "path": "/api/automations/run-delayed",
+      "schedule": "* * * * *"
+    }
+  ]
 }

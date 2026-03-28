@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import type { LeadStatus } from "@backoffice-os/database"
 import { createAuditLog } from "@/lib/audit"
+import { runAutomations } from "@/app/(app)/automations/actions"
 
 const createLeadSchema = z.object({
   name: z.string().min(1),
@@ -66,6 +67,11 @@ export async function updateLeadStatus(leadId: string, status: LeadStatus) {
       entityId: leadId,
       metadata: { name: lead?.name, from: lead?.status, to: status },
     })
+
+    // Fire automations
+    await runAutomations(orgId, "lead_stage_changed", "lead", leadId)
+    if (status === "WON") await runAutomations(orgId, "lead_won", "lead", leadId)
+    if (status === "LOST") await runAutomations(orgId, "lead_lost", "lead", leadId)
 
     revalidatePath("/crm")
     return { success: true }

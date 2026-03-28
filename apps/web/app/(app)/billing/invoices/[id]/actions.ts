@@ -64,9 +64,9 @@ export async function updateInvoiceStatus(
     })
 
     // Fire automations
-    const triggerMap: Record<string, string> = { PAID: "invoice.paid", OVERDUE: "invoice.overdue" }
+    const triggerMap: Record<string, string> = { PAID: "invoice_paid_full", OVERDUE: "invoice_overdue" }
     if (triggerMap[status]) {
-      await runAutomations(orgId, triggerMap[status], "invoice", invoiceId, { status, number: invoice.number })
+      await runAutomations(orgId, triggerMap[status], "invoice", invoiceId)
     }
 
     revalidatePath(`/billing/invoices/${invoiceId}`)
