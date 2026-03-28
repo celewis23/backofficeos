@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
   Plus, Zap, Trash2, Clock, CheckCircle2, XCircle, Edit2, Sparkles,
-  Search, Activity, TrendingUp, BarChart2, ChevronDown, ChevronUp,
+  Search, Activity, TrendingUp, BarChart2, ChevronDown, ChevronUp, ShieldCheck,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -88,6 +88,7 @@ type Stats = {
   active: number
   runsThisWeek: number
   successRate: number | null
+  pendingApprovals: number
 }
 
 type ActionItem = { type: string; config: Record<string, string> }
@@ -214,6 +215,17 @@ export function AutomationsClient({
           <p className="text-xs text-muted-foreground mt-0.5">Automate repetitive tasks with trigger-based rules</p>
         </div>
         <div className="flex items-center gap-2">
+          {stats.pendingApprovals > 0 && (
+            <Button size="sm" variant="outline" className="gap-1.5 relative" asChild>
+              <Link href="/automations/approvals">
+                <ShieldCheck className="size-3.5" />
+                Approvals
+                <span className="absolute -top-1.5 -right-1.5 size-4 rounded-full bg-yellow-500 text-[10px] font-bold text-white flex items-center justify-center leading-none">
+                  {stats.pendingApprovals}
+                </span>
+              </Link>
+            </Button>
+          )}
           <Button size="sm" variant="outline" className="gap-1.5" asChild>
             <Link href="/automations/templates">
               <Sparkles className="size-3.5" /> Templates

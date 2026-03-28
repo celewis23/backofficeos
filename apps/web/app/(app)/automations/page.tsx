@@ -7,7 +7,7 @@ export default async function AutomationsPage() {
 
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
-  const [automations, weekRuns, recentRuns] = await Promise.all([
+  const [automations, weekRuns, recentRuns, pendingApprovals] = await Promise.all([
     db.automation.findMany({
       where: { organizationId: orgId },
       include: {
@@ -39,6 +39,10 @@ export default async function AutomationsPage() {
         automation: { select: { id: true, name: true } },
       },
     }),
+
+    db.automationApproval.count({
+      where: { organizationId: orgId, status: "PENDING" },
+    }),
   ])
 
   const totalRuns = weekRuns.length
@@ -50,6 +54,7 @@ export default async function AutomationsPage() {
     active: automations.filter((a) => a.isActive).length,
     runsThisWeek: totalRuns,
     successRate,
+    pendingApprovals,
   }
 
   return (

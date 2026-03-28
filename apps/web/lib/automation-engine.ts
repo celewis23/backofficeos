@@ -581,3 +581,52 @@ export async function resumeDelayedStep(stepId: string): Promise<void> {
 
   await db.automationRun.update({ where: { id: run.id }, data: { status: "COMPLETED", completedAt: new Date() } })
 }
+
+/**
+ * Resume an automation run that was paused waiting for approval.
+ * Finds the next node after the pause_workflow node and continues execution.
+ */
+export async function resumeApprovalStep(approvalId: string): Promise<void> {
+  const approval = await db.automationApproval.findUnique({
+    where: { id: approvalId },
+    include: {
+      run: {
+        include: { automation: true },
+      },
+    },
+  })
+  if (!approval || approval.status !== "PENDING") return
+  if (!approval.run?.automation) return
+
+  const run = approval.run
+  const automation = run.automation
+  if (!run.organizationId) return
+
+  const hasGraph =
+    automation.nodes &&
+    typeof automation.nodes === "object" &&
+    "nodes" in (automation.nodes as object)
+  if (!hasGraph) return
+
+  const graph = automation.nodes as unknown as AutomationGraph
+  const pauseNode = graph.nodes.find((n) => n.id === approval.nodeId)
+  const nextNodeId = pauseNode?.next
+  if (!nextNodeId) return
+
+  // Mark the AWAITING_APPROVAL step as completed
+  await db.automationRunStep.updateMany({
+    where: { runId: run.id, nodeId: approval.nodeId, status: "AWAITING_APPROVAL" },
+    data: { status: "COMPLETED", executedAt: new Date() },
+  })
+
+  const orgId = run.organizationId
+  const eType = run.entityType ?? ""
+  const eId = run.entityId ?? ""
+  const ctx = await buildEntityContext(eType, eId, orgId)
+  await walkAndExecute(graph, ctx, orgId, eType, eId, run.id, nextNodeId)
+
+  await db.automationRun.update({
+    where: { id: run.id },
+    data: { status: "COMPLETED", completedAt: new Date() },
+  })
+}
