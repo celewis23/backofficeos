@@ -164,6 +164,17 @@
   outline-color: var(--ring);
 }
 
+/* Tailwind preflight resets button cursor to "default" — restore pointer on all
+   interactive elements so users always get the expected affordance. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a[href],
+label[for],
+select,
+summary {
+  cursor: pointer;
+}
+
 html {
   font-feature-settings: "cv11", "ss01";
   font-variation-settings: "opsz" 32;
