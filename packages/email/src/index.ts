@@ -1,6 +1,9 @@
 import { Resend } from "resend"
 
-export const resend = new Resend(process.env.RESEND_API_KEY)
+// Fall back to a placeholder so the constructor doesn't throw at build time
+// when RESEND_API_KEY is absent. Real sends will fail at runtime if the key
+// is still missing, which is the correct behaviour.
+export const resend = new Resend(process.env.RESEND_API_KEY || "re_placeholder")
 
 export interface SendEmailOptions {
   to: string | string[]
