@@ -848,13 +848,124 @@ function ActionConfigForm({ config, onChange }: { config: ActionConfig; onChange
         </Select>
       </div>
 
-      {/* AI suggestions stub */}
-      <div className="rounded-lg bg-muted/40 border border-border/50 p-3 mt-1">
-        <p className="text-[10px] font-semibold flex items-center gap-1.5 mb-1">
-          <Sparkles className="size-3 text-primary" /> AI suggestions
+    </div>
+  )
+}
+
+// ─── AI SUGGESTIONS ───────────────────────────────────────────────────────────
+
+type AiSuggestion = {
+  title: string; description: string
+  nodeType: AutomationNodeType; actionType?: string
+}
+
+function AiSuggestions({
+  automationId, automationName, triggerType, currentNode, graph, onInsert,
+}: {
+  automationId: string; automationName: string; triggerType: string
+  currentNode: AutomationNode; graph: AutomationGraph
+  onInsert: (nodeType: AutomationNodeType, actionType?: string) => void
+}) {
+  const [loading, setLoading] = React.useState(false)
+  const [suggestions, setSuggestions] = React.useState<AiSuggestion[] | null>(null)
+  const [error, setError] = React.useState<string | null>(null)
+
+  async function fetchSuggestions() {
+    setLoading(true); setError(null)
+    try {
+      const workflowSummary = graph.nodes
+        .map((n) => `${n.type}: ${nodeTitle(n)}`)
+        .join(" → ")
+      const res = await fetch("/api/automations/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          automationId,
+          automationName,
+          triggerType,
+          currentNodeType: currentNode.type,
+          currentNodeTitle: nodeTitle(currentNode),
+          existingStepCount: graph.nodes.length,
+          workflowSummary,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? "Failed"); return }
+      setSuggestions(data.suggestions)
+    } catch {
+      setError("Network error")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const ACTION_NODE_ICONS: Record<string, React.ElementType> = {
+    send_email: Mail, send_sms: MessageSquare, create_task: CheckSquare,
+    send_internal_notification: Bell, move_lead_stage: ArrowRight,
+    change_project_status: FolderKanban, add_client_tag: Tag, webhook_post: Webhook,
+    send_form: ClipboardList, send_contract: FileSignature, send_invoice: Receipt,
+    archive_project: Archive, post_slack: Hash, default: CircleDot,
+  }
+
+  return (
+    <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-semibold flex items-center gap-1.5 text-primary">
+          <Sparkles className="size-3" /> AI Suggestions
         </p>
-        <p className="text-[10px] text-muted-foreground">Save the workflow to get AI-powered next-step recommendations.</p>
+        {!loading && (
+          <button
+            onClick={fetchSuggestions}
+            className="text-[10px] text-primary hover:underline font-medium"
+          >
+            {suggestions ? "Refresh" : "Suggest next step"}
+          </button>
+        )}
       </div>
+
+      {loading && (
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+          <Loader2 className="size-3 animate-spin" /> Generating ideas…
+        </div>
+      )}
+
+      {error && (
+        <p className="text-[10px] text-destructive">{error}</p>
+      )}
+
+      {!loading && !suggestions && !error && (
+        <p className="text-[10px] text-muted-foreground">
+          Get AI-powered recommendations for what to add next.
+        </p>
+      )}
+
+      {suggestions && !loading && (
+        <div className="space-y-1.5">
+          {suggestions.map((s, i) => {
+            const Icon = s.nodeType === "condition" ? GitBranch
+              : s.nodeType === "delay" ? Clock
+              : (ACTION_NODE_ICONS[s.actionType ?? ""] ?? ACTION_NODE_ICONS.default)
+            return (
+              <button
+                key={i}
+                onClick={() => { onInsert(s.nodeType, s.actionType); setSuggestions(null) }}
+                className="w-full text-left rounded-md border border-border/70 bg-background/70 px-2.5 py-2 hover:bg-muted/60 hover:border-primary/40 transition-colors group"
+              >
+                <div className="flex items-start gap-2">
+                  <div className="size-5 rounded bg-muted flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary/10">
+                    <Icon className="size-3 text-muted-foreground group-hover:text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-medium leading-tight">{s.title}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{s.description}</p>
+                  </div>
+                  <Plus className="size-3 text-muted-foreground group-hover:text-primary shrink-0 mt-1" />
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -863,10 +974,14 @@ function ActionConfigForm({ config, onChange }: { config: ActionConfig; onChange
 
 function Inspector({
   node, runs, onUpdateConfig, onClose,
+  automationId, automationName, triggerType, graph, onInsertAfter,
 }: {
   node: AutomationNode; runs: Run[]
   onUpdateConfig: (nodeId: string, config: Partial<Record<string, unknown>>) => void
   onClose: () => void
+  automationId: string; automationName: string; triggerType: string
+  graph: AutomationGraph
+  onInsertAfter: (nodeType: AutomationNodeType, actionType?: string) => void
 }) {
   const runStatusColor: Record<string, string> = {
     SUCCESS: "bg-green-500", COMPLETED: "bg-green-500",
@@ -916,6 +1031,15 @@ function Inspector({
             <ActionConfigForm config={node.config as ActionConfig}
               onChange={(u) => onUpdateConfig(node.id, u)} />
           )}
+
+          <AiSuggestions
+            automationId={automationId}
+            automationName={automationName}
+            triggerType={triggerType}
+            currentNode={node}
+            graph={graph}
+            onInsert={onInsertAfter}
+          />
         </TabsContent>
 
         <TabsContent value="runlog" className="flex-1 overflow-y-auto px-3 py-3 mt-0">
@@ -1180,6 +1304,16 @@ export function BuilderClient({ automation }: { automation: BuilderAutomation })
             runs={automation.runs}
             onUpdateConfig={handleUpdateConfig}
             onClose={() => setSelectedNodeId(null)}
+            automationId={automation.id}
+            automationName={automationName}
+            triggerType={
+              (graph.nodes.find((n) => n.id === "trigger")?.config as TriggerConfig)?.trigger_type
+              ?? automation.triggerType
+            }
+            graph={graph}
+            onInsertAfter={(type, actionType) =>
+              selectedNodeId ? handleInsertNode(selectedNodeId, type, undefined, actionType) : undefined
+            }
           />
         )}
       </div>
