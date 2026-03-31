@@ -33,7 +33,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${fontInter.variable} ${fontMono.variable}`}
     >
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body className="min-h-screen bg-background text-foreground font-sans antialiased">
         <Providers>
           <TooltipProvider delayDuration={300}>
             {children}

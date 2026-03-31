@@ -184,8 +184,8 @@ html {
 }
 
 body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background-color: var(--background);
+  color: var(--foreground);
   font-family: var(--font-sans);
 }
 
@@ -198,22 +198,22 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
+  background: var(--border);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+  background: color-mix(in srgb, var(--muted-foreground) 50%, transparent);
 }
 
 /* ── Selection ───────────────────────────────────────────────────────────────── */
 ::selection {
-  background: hsl(var(--primary) / 0.2);
-  color: hsl(var(--foreground));
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
+  color: var(--foreground);
 }
 
 /* ── Focus ring ──────────────────────────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid hsl(var(--ring));
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
@@ -270,9 +270,9 @@ body {
 .animate-shimmer {
   background: linear-gradient(
     90deg,
-    hsl(var(--muted)) 25%,
-    hsl(var(--muted-foreground) / 0.1) 50%,
-    hsl(var(--muted)) 75%
+    var(--muted) 25%,
+    color-mix(in srgb, var(--muted-foreground) 10%, transparent) 50%,
+    var(--muted) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
