@@ -28,6 +28,7 @@ import {
   ClipboardList,
   Package,
   Images,
+  StickyNote,
 } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
 import { useUIStore } from "@/lib/stores/ui-store";
@@ -57,6 +58,7 @@ const NAV_ITEMS = [
   { href: "/calendar",    icon: Calendar,         label: "Calendar" },
   { href: "/scheduling",  icon: Clock,            label: "Scheduling" },
   { href: "/documents",   icon: FileText,         label: "Documents" },
+  { href: "/notes",       icon: StickyNote,       label: "Notes" },
   { href: "/assets",      icon: Images,           label: "Assets" },
   { href: "/expenses",    icon: Receipt,          label: "Expenses" },
   { href: "/inventory",   icon: Package,          label: "Inventory" },
