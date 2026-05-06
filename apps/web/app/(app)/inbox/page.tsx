@@ -8,7 +8,7 @@ export default async function InboxPage() {
   const { orgId } = await requireOrg()
 
   const threads = await db.thread.findMany({
-    where: { organizationId: orgId, isArchived: false },
+    where: { organizationId: orgId },
     include: {
       client: { select: { id: true, name: true } },
       messages: {
@@ -19,7 +19,7 @@ export default async function InboxPage() {
       _count: { select: { messages: true } },
     },
     orderBy: { lastMessageAt: "desc" },
-    take: 50,
+    take: 100,
   })
 
   const emailAccounts = await db.emailAccount.findMany({
