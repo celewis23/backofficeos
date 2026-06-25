@@ -7,6 +7,7 @@ const COLUMNS = [
     links: [
       { href: "/#features", label: "Features" },
       { href: "/pricing", label: "Pricing" },
+      { href: "/pricing#marketplace", label: "Add-ons" },
       { href: "/#how-it-works", label: "How it works" },
     ],
   },
@@ -32,8 +33,8 @@ export function SiteFooter() {
               <span className="font-semibold">ArcheionOS</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              The operating system for service businesses — CRM, billing, projects,
-              scheduling, and automations in one place.
+              The Business Operating System — replacing your entire software stack with
+              one connected platform.
             </p>
           </div>
 

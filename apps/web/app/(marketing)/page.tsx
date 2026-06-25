@@ -2,102 +2,98 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   ArrowRight,
-  CalendarClock,
-  Globe,
-  Inbox,
-  KanbanSquare,
-  Package,
-  Plug,
-  Quote,
-  Receipt,
-  UserCog,
-  Users,
-  Workflow,
+  Megaphone,
+  MessageSquare,
+  Settings2,
+  Target,
+  UsersRound,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CtaBanner } from "@/components/marketing/cta-banner";
 import { getSession } from "@/lib/auth-server";
 
-export const metadata = { title: "ArcheionOS — The operating system for your business" };
+export const metadata = {
+  title: "ArcheionOS — Your Business. One Operating System.",
+};
 
 const REPLACES = [
-  "Calendly",
-  "QuickBooks",
-  "HubSpot",
-  "Asana",
-  "Gusto",
-  "Square",
-  "Dropbox",
-  "Slack threads",
+  "CRM",
+  "Scheduling",
+  "Invoicing",
+  "Project Management",
+  "Client Portal",
+  "Internal Communication",
+  "File Storage",
+  "Email Management",
+  "Team Collaboration",
+  "AI Workflows",
+  "Marketing Tools",
 ];
 
-const FEATURES = [
+const DEPARTMENTS = [
   {
-    icon: Users,
-    title: "CRM & pipeline",
-    description: "Track leads from first contact to signed client without losing the thread.",
+    icon: Target,
+    name: "Sales",
+    items: ["CRM", "Pipeline", "Quotes", "Lead Management", "Follow Ups", "Customer History"],
+    description: "Every lead and customer record lives in one place — no exporting, no duplicate entry.",
   },
   {
-    icon: Receipt,
-    title: "Invoicing & payments",
-    description: "Send estimates, collect payments, and get paid faster with built-in billing.",
+    icon: Settings2,
+    name: "Operations",
+    items: ["Projects", "Tasks", "Scheduling", "Calendar", "Time Tracking", "Workflows"],
+    description: "Plan the work and run it without bouncing between five different tools.",
   },
   {
-    icon: KanbanSquare,
-    title: "Projects & time tracking",
-    description: "Plan the work, track the hours, and turn time into invoices automatically.",
+    icon: Wallet,
+    name: "Finance",
+    items: ["Invoices", "Payments", "Expenses", "Estimates", "Reporting"],
+    description: "Billing and reporting pull from the same data as sales and operations.",
   },
   {
-    icon: CalendarClock,
-    title: "Scheduling & booking",
-    description: "A shared calendar plus public booking pages so clients book themselves in.",
+    icon: MessageSquare,
+    name: "Customer Experience",
+    items: ["Client Portal", "Messaging", "Bookings", "Documents", "Support"],
+    description: "Clients get one branded portal — not a different login for every interaction.",
   },
   {
-    icon: Workflow,
-    title: "Automations & AI",
-    description: "Build no-code workflows, automate the busywork, and let AI suggest the next one.",
+    icon: Megaphone,
+    name: "Marketing",
+    items: ["Campaigns", "Forms", "Email Marketing", "Automation", "AI Content"],
+    description: "Marketing runs on the same customer data as sales — no list syncing required.",
   },
   {
-    icon: Globe,
-    title: "Client portal",
-    description: "Give every client a branded portal for invoices, files, and messages.",
-  },
-  {
-    icon: Inbox,
-    title: "Unified inbox",
-    description: "Connect Gmail and Outlook so every client thread lives next to the work.",
-  },
-  {
-    icon: Package,
-    title: "Inventory & POS",
-    description: "Sync sales from Square, Clover, and Toast and track stock across locations.",
-  },
-  {
-    icon: UserCog,
-    title: "HR & payroll",
-    description: "Manage your team and run payroll with Gusto, ADP, or Rippling.",
-  },
-  {
-    icon: Plug,
-    title: "Integrations",
-    description: "Connect the tools you already use — Slack, Zoom, Zapier, and more.",
+    icon: UsersRound,
+    name: "Team",
+    items: ["HR", "Payroll", "Inventory", "POS", "Permissions"],
+    description: "Manage your people and your operations from the same system.",
   },
 ];
 
-const STEPS = [
+const PHASES = [
   {
-    title: "Set up your workspace",
-    description: "Import your clients, connect your inbox and calendar, and invite your team.",
+    title: "Set Up",
+    description: "Import your business — clients, calendar, inbox, and team — in one pass.",
   },
   {
-    title: "Run the day-to-day",
-    description: "Manage leads, projects, invoices, and time tracking in one connected view.",
+    title: "Operate",
+    description: "Run sales, projects, billing, and support from a single connected view.",
   },
   {
-    title: "Automate the rest",
-    description: "Let workflows and AI handle the follow-ups, reminders, and busywork.",
+    title: "Automate",
+    description: "Let AI and workflows take over the repetitive work across every department.",
   },
+  {
+    title: "Grow",
+    description: "Scale your company without bolting on another disconnected subscription.",
+  },
+];
+
+const TRUST_STATEMENTS = [
+  "Designed for modern service businesses.",
+  "Built to replace 10+ business subscriptions.",
+  "Runs your sales, operations, finance, and customer communication from one place.",
 ];
 
 export default async function HomePage() {
@@ -116,12 +112,14 @@ export default async function HomePage() {
 
         <div className="mx-auto max-w-4xl px-6 pt-24 pb-16 text-center sm:pt-32">
           <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">
-            Run your entire business from one place.
+            Your Business.
+            <br />
+            One Operating System.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            ArcheionOS replaces the CRM, invoicing tool, scheduler, project tracker, and
-            half-dozen other apps your team has stitched together — with one connected
-            system and the automations to run it.
+            ArcheionOS replaces your CRM, scheduling, invoicing, project management, client
+            portal, internal communication, file storage, email, and marketing tools — with
+            one connected system built on a single customer record.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Button size="xl" asChild>
@@ -139,15 +137,21 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Replaces */}
+      {/* Replace the stack */}
       <section className="border-y border-border bg-muted/30">
-        <div className="mx-auto max-w-5xl px-6 py-10 text-center">
-          <p className="text-sm font-medium text-muted-foreground">
-            Built to replace the tool stack you're already paying for
+        <div className="mx-auto max-w-5xl px-6 py-14 text-center">
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Everything These Apps Do — In One Platform
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
+            Stop paying for a different subscription for every part of your business.
           </p>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
             {REPLACES.map((tool) => (
-              <span key={tool} className="text-sm text-muted-foreground/70 line-through">
+              <span
+                key={tool}
+                className="rounded-full border border-border bg-background px-3.5 py-1.5 text-sm text-muted-foreground"
+              >
                 {tool}
               </span>
             ))}
@@ -155,69 +159,74 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Features */}
+      {/* Departments */}
       <section id="features" className="mx-auto max-w-6xl px-6 py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-            Everything your business needs, connected
+            One Platform. Every Department.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Every module shares the same clients, projects, and data — so nothing falls
-            through the cracks between tools.
+            Not a bundle of separate tools — every department reads and writes to the same
+            data.
           </p>
         </div>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((feature) => (
-            <Card key={feature.title} hover>
+          {DEPARTMENTS.map((dept) => (
+            <Card key={dept.name} hover>
               <CardContent className="pt-6">
                 <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                  <feature.icon className="size-5 text-primary" />
+                  <dept.icon className="size-5 text-primary" />
                 </div>
-                <h3 className="mt-4 font-semibold">{feature.title}</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground">{feature.description}</p>
+                <h3 className="mt-4 font-semibold">{dept.name}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{dept.items.join(" · ")}</p>
+                <p className="mt-3 text-sm text-muted-foreground/80">{dept.description}</p>
               </CardContent>
             </Card>
           ))}
         </div>
+
+        <div className="mx-auto mt-12 max-w-2xl text-center">
+          <p className="text-lg font-medium tracking-tight">
+            One shared database. One customer record.
+          </p>
+          <p className="mt-2 text-muted-foreground">
+            No duplicate records. No syncing between apps. No disconnected workflows.
+          </p>
+        </div>
       </section>
 
-      {/* How it works */}
+      {/* Workflow */}
       <section id="how-it-works" className="border-t border-border bg-muted/30">
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              From signup to running the business
+              Set Up. Operate. Automate. Grow.
             </h2>
           </div>
 
-          <div className="mt-12 grid gap-8 sm:grid-cols-3">
-            {STEPS.map((step, i) => (
-              <div key={step.title} className="space-y-3">
+          <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {PHASES.map((phase, i) => (
+              <div key={phase.title} className="space-y-3">
                 <div className="flex size-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                   {i + 1}
                 </div>
-                <h3 className="font-semibold">{step.title}</h3>
-                <p className="text-sm text-muted-foreground">{step.description}</p>
+                <h3 className="font-semibold">{phase.title}</h3>
+                <p className="text-sm text-muted-foreground">{phase.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonial */}
-      <section className="mx-auto max-w-3xl px-6 py-20 text-center">
-        <Quote className="mx-auto size-8 text-primary/40" />
-        <blockquote className="mt-6 text-2xl font-medium leading-relaxed tracking-tight">
-          "The only tool we need to run the entire business — from proposals to payments
-          to team management."
-        </blockquote>
-        <div className="mt-6 flex items-center justify-center gap-3">
-          <div className="size-10 rounded-full bg-muted" />
-          <div className="text-left">
-            <p className="text-sm font-medium">Sarah Chen</p>
-            <p className="text-sm text-muted-foreground">Founder, Meridian Studio</p>
-          </div>
+      {/* Trust statements */}
+      <section className="mx-auto max-w-5xl px-6 py-20">
+        <div className="grid gap-8 sm:grid-cols-3">
+          {TRUST_STATEMENTS.map((statement) => (
+            <p key={statement} className="text-center text-lg font-medium tracking-tight">
+              {statement}
+            </p>
+          ))}
         </div>
       </section>
 
