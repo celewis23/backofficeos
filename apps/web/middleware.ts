@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
   "/api/forms",
   "/api/portal",
   "/onboarding",
+  "/pricing",
   "/_next",
   "/favicon.ico",
 ]
@@ -22,8 +23,8 @@ const PUBLIC_PATHS = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow public paths through
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  // Allow the marketing homepage and other public paths through
+  if (pathname === "/" || PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next()
   }
 
